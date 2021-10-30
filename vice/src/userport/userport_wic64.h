@@ -1,8 +1,8 @@
 /*
- * userport_diag_586220_harness.h: Userport part of the 586220 diagnostics harness.
+ * userport_wic64.h:
  *
  * Written by
- *  Marco van den Heuvel <blackystardust68@yahoo.com>
+ *  groepaz <groepaz@gmx.net>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
  * See README for copyright notice.
@@ -24,11 +24,11 @@
  *
  */
 
-#ifndef VICE_USERPORT_DIAG_586220_HARNESS_H
-#define VICE_USERPORT_DIAG_586220_HARNESS_H
+#ifndef VICE_USERPORT_WIC64_H
+#define VICE_USERPORT_WIC64_H
 
 #include "types.h"
 
-extern int userport_diag_586220_harness_resources_init(void);
+extern int userport_wic64_resources_init(void);
 
 #endif

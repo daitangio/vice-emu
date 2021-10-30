@@ -36,6 +36,7 @@
 #include "dtl-basic-dongle.h"
 #include "lib.h"
 #include "log.h"
+#include "machine.h"
 #include "resources.h"
 #include "sense-dongle.h"
 #include "snapshot.h"
@@ -48,7 +49,7 @@
 static int tapeport_active = 1;
 
 /* current tapeport devices */
-static int tapeport_current_device[TAPEPORT_MAX_PORTS] = { TAPEPORT_DEVICE_DATASETTE, TAPEPORT_DEVICE_DATASETTE };
+static int tapeport_current_device[TAPEPORT_MAX_PORTS] = { TAPEPORT_DEVICE_NONE, TAPEPORT_DEVICE_NONE };
 
 static tapeport_device_t tapeport_device[TAPEPORT_MAX_DEVICES] = {0};
 
@@ -320,17 +321,29 @@ static int tapeport_device_resources_init(int amount)
     if (tapertc_resources_init(amount) < 0) {
         return -1;
     }
+
     if (sense_dongle_resources_init(amount) < 0) {
         return -1;
     }
-    if (dtlbasic_dongle_resources_init(amount) < 0) {
-        return -1;
-    }
-    if (tapecart_resources_init(amount) < 0) {
-        return -1;
+
+    /* Only use tapecart device and dtl basic dongle on c64/c128 */
+    if (machine_class == VICE_MACHINE_C64 || machine_class == VICE_MACHINE_C128 || machine_class == VICE_MACHINE_C64SC) {
+        if (dtlbasic_dongle_resources_init(amount) < 0) {
+            return -1;
+        }
+
+        if (tapecart_resources_init(amount) < 0) {
+            return -1;
+        }
     }
 
-    return 0;
+#ifdef TAPEPORT_EXPERIMENTAL_DEVICES
+    if (tape_diag_586220_harness_resources_init(amount) < 0) {
+        return -1;
+    }
+#endif
+
+    return datasette_resources_init(amount);
 }
 
 int tapeport_resources_init(int amount)
@@ -338,6 +351,9 @@ int tapeport_resources_init(int amount)
     memset(tapeport_device, 0, sizeof(tapeport_device));
     tapeport_device[0].name = "None";
     tapeport_ports = amount;
+
+    tapeport_device_resources_init(amount);
+
 
     if (tapeport_ports >= 1) {
         if (resources_register_int(resources_int_port1) < 0) {
@@ -351,7 +367,7 @@ int tapeport_resources_init(int amount)
         }
     }
 
-    return tapeport_device_resources_init(amount);
+    return 0;
 }
 
 void tapeport_resources_shutdown(void)
@@ -482,11 +498,14 @@ static int tapeport_devices_cmdline_options_init(void)
         return -1;
     }
 
-    if (tapecart_cmdline_options_init() < 0) {
-        return -1;
+    /* Only use tapecart device on c64/c128 */
+    if (machine_class == VICE_MACHINE_C64 || machine_class == VICE_MACHINE_C128 || machine_class == VICE_MACHINE_C64SC) {
+        if (tapecart_cmdline_options_init() < 0) {
+            return -1;
+        }
     }
 
-    return 0;
+    return datasette_cmdline_options_init();
 }
 
 int tapeport_cmdline_options_init(void)

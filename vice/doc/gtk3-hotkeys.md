@@ -109,6 +109,12 @@ the default install prefix for VICE was used.
 
 Remove a hotkey from whatever action it is mapped to.
 
+For example:
+```
+!undef      <Alt>r      # Unmap Alt+r from 'restore display'
+reset-soft  <Alt>r      # Map Alt+r to soft reset
+```
+
 
 ### Hotkey mappings
 
@@ -246,7 +252,6 @@ https://gitlab.gnome.org/GNOME/gtk/blob/master/gdk/gdkkeysyms.h
 | `snapshot-quicksave`            | Quicksave snapshot                                  | yes | yes   | yes    | yes     | yes  | yes  | yes    | yes  | yes     | yes   |
 | `snapshot-save`                 | Save snapshot file                                  | yes | yes   | yes    | yes     | yes  | yes  | yes    | yes  | yes     | yes   |
 | `swap-controlport-toggle`       | Swap controlport joysticks                          | yes | yes   | yes    | yes     | no   | no   | yes    | no   | yes     | no    |
-| `swap-userport-toggle`          | Swap userport joysticks                             | yes | yes   | no     | yes     | yes  | yes  | yes    | yes  | no      | yes   |
 | `tape-attach-1`                 | Attach tape to datasette 1                          | yes | yes   | no     | no      | yes  | yes  | yes    | yes  | yes     | yes   |
 | `tape-attach-2`                 | Attach tape to datasette 2                          | no  | no    | no     | no      | no   | no   | no     | yes  | no      | no    |
 | `tape-create-1`                 | Create tape and attach to datasette 1               | yes | yes   | no     | no      | yes  | yes  | yes    | yes  | yes     | yes   |

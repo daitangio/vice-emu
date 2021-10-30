@@ -316,10 +316,6 @@ int machine_resources_init(void)
         init_resource_fail("tapeport");
         return -1;
     }
-    if (datasette_resources_init() < 0) {
-        init_resource_fail("datasette");
-        return -1;
-    }
     if (acia1_resources_init() < 0) {
         init_resource_fail("acia1");
         return -1;
@@ -534,10 +530,6 @@ int machine_cmdline_options_init(void)
     }
     if (tapeport_cmdline_options_init() < 0) {
         init_cmdline_options_fail("tapeport");
-        return -1;
-    }
-    if (datasette_cmdline_options_init() < 0) {
-        init_cmdline_options_fail("datasette");
         return -1;
     }
     if (acia1_cmdline_options_init() < 0) {
@@ -1116,7 +1108,8 @@ static userport_port_props_t userport_props = {
     1,                      /* port has the pa3 pin */
     cbm2_userport_set_flag, /* port has the flag pin, set flag function */
     1,                      /* port has the pc pin */
-    0                       /* port does NOT have the cnt1, cnt2 or sp pins */
+    0,                      /* port does NOT have the cnt1, cnt2 or sp pins */
+    0                       /* port does NOT have the reset pin */
 };
 
 int machine_register_userport(void)
