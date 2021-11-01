@@ -62,6 +62,7 @@
 #include "machine.h"
 #include "mainlock.h"
 #include "resources.h"
+#include "tapeport.h"
 #include "ui.h"
 #include "uiabout.h"
 #include "uiactions.h"
@@ -421,37 +422,73 @@ static ui_menu_item_t disk_fliplist_submenu[] = {
 };
 /* }}} */
 
-/* {{{ datasette_control_submenu[] */
-/** \brief  File->Datasette control submenu
+/* {{{ datasette_1_control_submenu[] */
+/** \brief  File->Datasette control submenu for port #1
  */
-static ui_menu_item_t datasette_control_submenu[] = {
+static ui_menu_item_t datasette_1_control_submenu[] = {
     { "Stop", UI_MENU_TYPE_ITEM_ACTION,
       ACTION_TAPE_STOP_1, ui_datasette_tape_action_cb,
-      GINT_TO_POINTER(DATASETTE_CONTROL_STOP),
+      GINT_TO_POINTER(DATASETTE_CONTROL_STOP | (TAPEPORT_UNIT_1 << 8)),
       0, 0, false },
     { "Start", UI_MENU_TYPE_ITEM_ACTION,
       ACTION_TAPE_PLAY_1, ui_datasette_tape_action_cb,
-      GINT_TO_POINTER(DATASETTE_CONTROL_START),
+      GINT_TO_POINTER(DATASETTE_CONTROL_START | (TAPEPORT_UNIT_1 << 8)),
       0, 0, false },
     { "Forward", UI_MENU_TYPE_ITEM_ACTION,
       ACTION_TAPE_FFWD_1, ui_datasette_tape_action_cb,
-      GINT_TO_POINTER(DATASETTE_CONTROL_FORWARD),
+      GINT_TO_POINTER(DATASETTE_CONTROL_FORWARD | (TAPEPORT_UNIT_1 << 8)),
       0, 0, false },
     { "Rewind", UI_MENU_TYPE_ITEM_ACTION,
       ACTION_TAPE_REWIND_1, ui_datasette_tape_action_cb,
-      GINT_TO_POINTER(DATASETTE_CONTROL_REWIND),
+      GINT_TO_POINTER(DATASETTE_CONTROL_REWIND | (TAPEPORT_UNIT_1 << 8)),
       0, 0, false },
     { "Record", UI_MENU_TYPE_ITEM_ACTION,
       ACTION_TAPE_RECORD_1, ui_datasette_tape_action_cb,
-      GINT_TO_POINTER(DATASETTE_CONTROL_RECORD),
+      GINT_TO_POINTER(DATASETTE_CONTROL_RECORD | (TAPEPORT_UNIT_1 << 8)),
       0, 0, false },
     { "Reset", UI_MENU_TYPE_ITEM_ACTION,
       ACTION_TAPE_RESET_1, ui_datasette_tape_action_cb,
-      GINT_TO_POINTER(DATASETTE_CONTROL_RESET),
+      GINT_TO_POINTER(DATASETTE_CONTROL_RESET | (TAPEPORT_UNIT_1 << 8)),
       0, 0, false },
     { "Reset Counter", UI_MENU_TYPE_ITEM_ACTION,
       ACTION_TAPE_RESET_COUNTER_1, ui_datasette_tape_action_cb,
-      GINT_TO_POINTER(DATASETTE_CONTROL_RESET_COUNTER),
+      GINT_TO_POINTER(DATASETTE_CONTROL_RESET_COUNTER | (TAPEPORT_UNIT_1 << 8)),
+      0, 0, false },
+    UI_MENU_TERMINATOR
+};
+/* }}} */
+
+/* {{{ datasette_2_control_submenu[] */
+/** \brief  File->Datasette control submenu for port #2
+ */
+static ui_menu_item_t datasette_2_control_submenu[] = {
+    { "Stop", UI_MENU_TYPE_ITEM_ACTION,
+      ACTION_TAPE_STOP_1, ui_datasette_tape_action_cb,
+      GINT_TO_POINTER(DATASETTE_CONTROL_STOP | (TAPEPORT_UNIT_2 << 8)),
+      0, 0, false },
+    { "Start", UI_MENU_TYPE_ITEM_ACTION,
+      ACTION_TAPE_PLAY_1, ui_datasette_tape_action_cb,
+      GINT_TO_POINTER(DATASETTE_CONTROL_START | (TAPEPORT_UNIT_2 << 8)),
+      0, 0, false },
+    { "Forward", UI_MENU_TYPE_ITEM_ACTION,
+      ACTION_TAPE_FFWD_1, ui_datasette_tape_action_cb,
+      GINT_TO_POINTER(DATASETTE_CONTROL_FORWARD | (TAPEPORT_UNIT_2 << 8)),
+      0, 0, false },
+    { "Rewind", UI_MENU_TYPE_ITEM_ACTION,
+      ACTION_TAPE_REWIND_1, ui_datasette_tape_action_cb,
+      GINT_TO_POINTER(DATASETTE_CONTROL_REWIND | (TAPEPORT_UNIT_2 << 8)),
+      0, 0, false },
+    { "Record", UI_MENU_TYPE_ITEM_ACTION,
+      ACTION_TAPE_RECORD_1, ui_datasette_tape_action_cb,
+      GINT_TO_POINTER(DATASETTE_CONTROL_RECORD | (TAPEPORT_UNIT_2 << 8)),
+      0, 0, false },
+    { "Reset", UI_MENU_TYPE_ITEM_ACTION,
+      ACTION_TAPE_RESET_1, ui_datasette_tape_action_cb,
+      GINT_TO_POINTER(DATASETTE_CONTROL_RESET | (TAPEPORT_UNIT_2 << 8)),
+      0, 0, false },
+    { "Reset Counter", UI_MENU_TYPE_ITEM_ACTION,
+      ACTION_TAPE_RESET_COUNTER_1, ui_datasette_tape_action_cb,
+      GINT_TO_POINTER(DATASETTE_CONTROL_RESET_COUNTER | (TAPEPORT_UNIT_2 << 8)),
       0, 0, false },
     UI_MENU_TERMINATOR
 };
@@ -515,21 +552,67 @@ static ui_menu_item_t file_menu_head[] = {
 /** \brief  'File' menu - tape section
  */
 static ui_menu_item_t file_menu_tape[] = {
-    { "Attach tape image ...", UI_MENU_TYPE_ITEM_ACTION,
+    { "Attach datasette image ...", UI_MENU_TYPE_ITEM_ACTION,
       ACTION_TAPE_ATTACH_1,
-      ui_tape_attach_callback, NULL,
+      ui_tape_attach_callback, (void*)1,
       GDK_KEY_T, VICE_MOD_MASK, true },
-    { "Create and attach an empty tape image ...", UI_MENU_TYPE_ITEM_ACTION,
+    { "Create and attach datasette image ...", UI_MENU_TYPE_ITEM_ACTION,
       ACTION_TAPE_CREATE_1,
-        ui_tape_create_dialog_show, NULL,
+        ui_tape_create_dialog_show, (void*)1,
         0, 0, true },
-    { "Detach tape image", UI_MENU_TYPE_ITEM_ACTION,
+    { "Detach datasette image", UI_MENU_TYPE_ITEM_ACTION,
       ACTION_TAPE_DETACH_1,
-      ui_tape_detach_callback, NULL,
+      ui_tape_detach_callback, (void*)1,
       0, 0, false },
     { "Datasette controls", UI_MENU_TYPE_SUBMENU,
-      NULL, NULL, datasette_control_submenu,
+      NULL, NULL, datasette_1_control_submenu,
       0, 0, false },
+    UI_MENU_SEPARATOR,  /* Required since this menu gets inserted between
+                           disk menu items and cartridge items on emulators
+                           that have a datasette port. */
+    UI_MENU_TERMINATOR
+};
+/* }}} */
+
+/* {{{ file_menu_tape_xpet[] */
+/** \brief  'File' menu - tape section for xpet
+ */
+static ui_menu_item_t file_menu_tape_xpet[] = {
+    { "Attach datasette #1 image ...", UI_MENU_TYPE_ITEM_ACTION,
+      ACTION_TAPE_ATTACH_1,
+      ui_tape_attach_callback, (void*)TAPEPORT_UNIT_1,
+      GDK_KEY_T, VICE_MOD_MASK, true },
+    { "Create and attach datasette #1 image ...", UI_MENU_TYPE_ITEM_ACTION,
+      ACTION_TAPE_CREATE_1,
+      ui_tape_create_dialog_show, (void*)TAPEPORT_UNIT_1,
+      0, 0, true },
+    { "Detach datasette #1 image", UI_MENU_TYPE_ITEM_ACTION,
+      ACTION_TAPE_DETACH_1,
+      ui_tape_detach_callback, (void*)TAPEPORT_UNIT_1,
+      0, 0, false },
+    /* TODO: fix the submenus: */
+    { "Datasette #1 controls", UI_MENU_TYPE_SUBMENU,
+      NULL, NULL, datasette_1_control_submenu,
+      0, 0, false },
+
+    UI_MENU_SEPARATOR,
+
+    { "Attach datasette #2 image ...", UI_MENU_TYPE_ITEM_ACTION,
+      ACTION_TAPE_ATTACH_2,
+      ui_tape_attach_callback, (void*)TAPEPORT_UNIT_2,
+      GDK_KEY_T, VICE_MOD_MASK, true },
+   { "Create and attach datasette #2 image ...", UI_MENU_TYPE_ITEM_ACTION,
+      ACTION_TAPE_CREATE_2,
+      ui_tape_create_dialog_show, (void*)TAPEPORT_UNIT_2,
+      0, 0, true },
+   { "Detach datasette #2 image", UI_MENU_TYPE_ITEM_ACTION,
+      ACTION_TAPE_DETACH_2,
+      ui_tape_detach_callback, (void*)TAPEPORT_UNIT_2,
+      0, 0, false },
+   { "Datasette #2 controls", UI_MENU_TYPE_SUBMENU,
+      NULL, NULL, datasette_2_control_submenu,
+      0, 0, false },
+
     UI_MENU_SEPARATOR,  /* Required since this menu gets inserted between
                            disk menu items and cartridge items on emulators
                            that have a datasette port. */
@@ -948,6 +1031,9 @@ static ui_menu_ref_t menu_references[] = {
     { "file-submenu-detach-disk",           disk_detach_submenu },
     { "file-submenu-disk-fliplist",         disk_fliplist_submenu },
     { "file-section-tape",                  file_menu_tape },
+    { "file-section-tape-xpet",             file_menu_tape_xpet },
+    { "file-submenu-tape1-controls",        datasette_1_control_submenu },
+    { "file-submenu-tape2-controls",        datasette_2_control_submenu },
     { "file-section-cart",                  file_menu_cart },
     { "file-submenu-reset",                 reset_submenu },
     { "file-section-tail",                  file_menu_tail },
@@ -1093,8 +1179,7 @@ GtkWidget *ui_machine_menu_bar_create(void)
             break;
 
         case VICE_MACHINE_PET:
-            /* TODO: add items for second datasette, once emulated */
-            file_menu_tape_section = file_menu_tape;
+            file_menu_tape_section = file_menu_tape_xpet;
             settings_menu_joy_section = settings_menu_joy_without_swap;
             break;
 

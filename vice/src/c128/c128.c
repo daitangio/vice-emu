@@ -1303,12 +1303,13 @@ void machine_specific_reset(void)
 {
     serial_traps_reset();
 
+    /* These calls must be before the CIA initialization */
+    rs232drv_reset();
+    userport_reset();
+
     ciacore_reset(machine_context.cia1);
     ciacore_reset(machine_context.cia2);
     sid_reset();
-
-    rs232drv_reset();
-    userport_reset();
 
     printer_reset();
 
@@ -1334,7 +1335,7 @@ void machine_specific_powerup(void)
 void machine_specific_shutdown(void)
 {
     /* and the tape */
-    tape_image_detach_internal(1);
+    tape_image_detach_internal(TAPEPORT_PORT_1 + 1);
 
     /* and cartridge */
     cartridge_detach_image(-1);
