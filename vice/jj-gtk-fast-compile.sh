@@ -26,10 +26,15 @@
  sudo apt-get install -y libflac-dev        # FLAC support
  sudo apt-get install -y yasm               # required for --enable-static-ffmpeg
 
+# No CMAKE:
 ./autogen.sh
-
-./configure --enable-native-gtk3ui 
+./configure --enable-native-gtk3ui --prefix=/opt/vice
 make -j 2
 sudo make install
+
+
+#C MAKE VARIANT
+./autogen.sh
+./configure --enable-cmake --enable-native-gtk3ui --prefix=/opt
 
 # /usr/local/bin/xvic +sound +vsync

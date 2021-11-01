@@ -96,6 +96,8 @@ static uint8_t serialcommand(unsigned int device, uint8_t secondary)
     if ((secondary & 0xf0) != 0x60) {
         p->nextok[channel] = 0;
     }
+
+    DBG(("GG PARSING SERIAL COMMAND"));
     switch (secondary & 0xf0) {
         case 0x20:
         case 0x30:

@@ -26,7 +26,7 @@
  *
  */
 
-/* #define DEBUG_AUTOSTART */
+#define DEBUG_AUTOSTART
 
 #include <string.h>
 #include <inttypes.h>

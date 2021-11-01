@@ -74,3 +74,13 @@ src/xplus4
 src/xscpu64
 src/xvic
 ylwrap
+
+# Additional ignores
+src/config.h.in~
+
+# CMake Extensions
+CMakeCache.txt
+**/CMakeLists.txt
+**/cmake_install.cmake
+**/CMakeFiles/
+.vscode

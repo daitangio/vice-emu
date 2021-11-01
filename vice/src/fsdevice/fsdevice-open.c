@@ -34,7 +34,8 @@
 
 #include "vice.h"
 
-/* #define DEBUG_DRIVEOPEN */
+// GG Debug mode on
+#define DEBUG_DRIVEOPEN
 
 #include <ctype.h>
 #include <stdio.h>
@@ -214,6 +215,7 @@ static int fsdevice_open_file(vdrive_t *vdrive, unsigned int secondary,
                               bufinfo_t *bufinfo,
                               cbmdos_cmd_parse_t *cmd_parse, char *rname)
 {
+    // GG Entry point for fs virtual open.
     char *comma;
     char *newrname;
     tape_image_t *tape;
@@ -387,6 +389,13 @@ int fsdevice_open(vdrive_t *vdrive, const uint8_t *name, unsigned int length,
     bufinfo_t *bufinfo;
 
     DBG(("fsdevice_open name:'%s' (secondary:%u)\n", name, secondary));
+
+    // Device23 implementation hook
+    if(secondary==3) {
+        DBG(("Device23 Hook 83 "));
+        // if (*name == '$') {
+    }
+
 
     bufinfo = fsdevice_dev[vdrive->unit - 8].bufinfo;
 

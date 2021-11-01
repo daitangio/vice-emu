@@ -159,11 +159,17 @@ int serial_iec_device_cmdline_options_init(void)
 /* Implement IEC devices here.  */
 
 /*------------------------------------------------------------------------*/
-
-#define IEC_DEVICE_DEBUG 0
+/** GG Value between 0 and 5
+ * 5 is very verbose
+ * 3 is good
+ */
+#define IEC_DEVICE_DEBUG 4
 
 /* Logging goes here.  */
 #if IEC_DEVICE_DEBUG > 0
+// GG missed ctype for isprint when debug level is grather than 5
+#include <ctype.h>
+
 static log_t serial_iec_device_log = LOG_ERR;
 #endif
 
