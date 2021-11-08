@@ -1013,10 +1013,11 @@ static void advance_hastape(void)
 
 static void advance_pressplayontape(void)
 {
+    int port = (autostart_tape_unit == 2) ? TAPEPORT_PORT_2 : TAPEPORT_PORT_1;
     switch (check2("PRESS PLAY ON TAPE", AUTOSTART_NOWAIT_BLINK, 0, AUTOSTART_CHECK_ANY_COLUMN)) {
         case YES:
             autostartmode = AUTOSTART_LOADINGTAPE;
-            datasette_control(TAPEPORT_PORT_1, DATASETTE_CONTROL_START);
+            datasette_control(port, DATASETTE_CONTROL_START);
             break;
         case NO:
             disable_warp_if_was_requested();
@@ -2042,25 +2043,30 @@ int autostart_autodetect(const char *file_name, const char *program_name,
         return 0;
     }
 
-    if (machine_class != VICE_MACHINE_C64DTV && machine_class != VICE_MACHINE_SCPU64) {
+    /* DTV has no tape port, SCPU makes tape non operational */
+    if ((machine_class != VICE_MACHINE_C64DTV) &&
+        (machine_class != VICE_MACHINE_SCPU64)) {
         int tapedevice_temp;
 
         if (resources_get_int("TapePort1Device", &tapedevice_temp) < 0) {
             log_error(LOG_ERR, "Failed to get Datasette status.");
         }
 
-        set_tapeport_device(1, 0);
+        set_tapeport_device(1, 0);  /* select datasette on, tapecart off */
 
         if (autostart_tape(file_name, program_name, program_number, runmode, TAPEPORT_PORT_1) == 0) {
             log_message(autostart_log, "`%s' recognized as tape image.", file_name);
             return 0;
         }
 
-        set_tapeport_device(0, 1);
-
-        if (autostart_tapecart(file_name, NULL) == 0) {
-            log_message(autostart_log, "`%s' recognized as tapecart image.", file_name);
-            return 0;
+        /* tapecart can only be used with C64 (or C64 mode of C128) */
+        if ((machine_class == VICE_MACHINE_C64) &&
+            (machine_class == VICE_MACHINE_C128)) {
+            set_tapeport_device(0, 1); /* select datasette off, tapecart on */
+            if (autostart_tapecart(file_name, NULL) == 0) {
+                log_message(autostart_log, "`%s' recognized as tapecart image.", file_name);
+                return 0;
+            }
         }
 
         resources_set_int("TapePort1Device", tapedevice_temp);

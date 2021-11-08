@@ -3547,35 +3547,89 @@ port device is connected to a control port.
 Set the device attached to:
 control port 1 (x64, x64sc, x64dtv, xscpu64, x128, xcbm5x0, xplus4)
 control port (xvic).
-(x64, x64sc, xscpu64, x128, xcbm5x0, xvic: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Mouse (CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 11: Light Pen (up trigger), 12: Light Pen (left trigger), 13: Datel Light Pen, 14: Magnum Light Phaser, 15: Stack Light Rifle, 16: Inkwell Light Pen, 17: Sampler (2bit))
-(x64dtv, xplus4: 0: None, 1: Joystick, 6: Mouse (CX-22), 17: Sampler (2bit))
+(x64, x64sc, xscpu64, x128: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 11: Light Pen (up trigger), 12: Light Pen (left trigger), 13: Light Pen (Datel), 14: Light Gun (Magnum Light Phaser), 15: Light Gun (Stack Light Rifle), 16: Light Pen (Inkwell), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 20: Dongle (Paperclip64), 21: Keypad (Coplin), 22: Keypad (Cardco Cardkey 1), 23: Keypad (Atari CX85), 24: Keypad (RushWare), 25: Keypad (Atari CX21), 26: Dongle (Script 64), 27: Dongle (VizaWrite 64), 28: Dongle (WaaSoft), 29: SNES Pad Adapter (Trapthem), 30: SNES Pad Adapter (Ninja), 31: Joystick Adapter (Spaceballs), 32: Joystick Adapter (Inception), 33: Joystick Adapter (MultiJoy Joysticks), 34: Joystick Adapter (MultiJoy Logic), 35: Protopad, 36: Joyport I/O simulation, 37: Microflyte Joystick)
+(x64dtv: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 20: Dongle (Paperclip64), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 30: SNES Pad Adapter (Ninja), 32: Joystick Adapter (Inception), 33: Joystick Adapter (MultiJoy Joysticks), 34: Joystick Adapter (MultiJoy Logic), 35: Protopad, 36: Joyport I/O simulation)
+(xvic: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 11: Light Pen (up trigger), 12: Light Pen (left trigger), 13: Light Pen (Datel), 14: Light Gun (Magnum Light Phaser), 15: Light Gun (Stack Light Rifle), 16: Light Pen (Inkwell), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 22: Keypad (Cardco Cardkey 1), 23: Keypad (Atari CX85), 24: Keypad (RushWare), 25: Keypad (Atari CX21), 29: SNES Pad Adapter (Trapthem), 30: SNES Pad Adapter (Ninja), 31: Joystick Adapter (Spaceballs), 32: Joystick Adapter (Inception), 35: Protopad, 36: Joyport I/O simulation, 37: Microflyte Joystick)
+(xplus4: 0: None, 1: Joystick, 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 21: Keypad (Coplin), 24: Keypad (RushWare), 36: Joyport I/O simulation)
+(xcbm5x0: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 30: SNES Pad Adapter (Ninja), 32: Joystick Adapter (Inception), 33: Joystick Adapter (MultiJoy Joysticks), 34: Joystick Adapter (MultiJoy Logic), 35: Protopad, 36: Joyport I/O simulation, 37: Microflyte Joystick)
 
 @vindex JoyPort2Device
 @item JoyPort2Device
 Set the device attached to:
 control port 2 (x64, x64sc, x64dtv, xscpu64, x128, xcbm5x0, xplus4)
-(x64, x64sc, xscpu, x128, xcbm5x0: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Mouse (CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 17: Sampler (2bit))
-(x64dtv, xplus4: 0: None, 1: Joystick, 6: Mouse (CX-22), 17: Sampler (2bit))
+(x64, x64sc, xscpu64, x128: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 20: Dongle (Paperclip64), 21: Keypad (Coplin), 22: Keypad (Cardco Cardkey 1), 23: Keypad (Atari CX85), 24: Keypad (RushWare), 25: Keypad (Atari CX21), 26: Dongle (Script 64), 27: Dongle (VizaWrite 64), 28: Dongle (WaaSoft), 29: SNES Pad Adapter (Trapthem), 30: SNES Pad Adapter (Ninja), 31: Joystick Adapter (Spaceballs), 32: Joystick Adapter (Inception), 33: Joystick Adapter (MultiJoy Joysticks), 34: Joystick Adapter (MultiJoy Logic), 35: Protopad, 36: Joyport I/O simulation, 37: Microflyte Joystick)
+(x64dtv: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 20: Dongle (Paperclip64), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 30: SNES Pad Adapter (Ninja), 32: Joystick Adapter (Inception), 33: Joystick Adapter (MultiJoy Joysticks), 34: Joystick Adapter (MultiJoy Logic), 35: Protopad, 36: Joyport I/O simulation)
+(xplus4: 0: None, 1: Joystick, 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 21: Keypad (Coplin), 24: Keypad (RushWare), 36: Joyport I/O simulation)
+(xcbm5x0: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 30: SNES Pad Adapter (Ninja), 32: Joystick Adapter (Inception), 33: Joystick Adapter (MultiJoy Joysticks), 34: Joystick Adapter (MultiJoy Logic), 35: Protopad, 36: Joyport I/O simulation, 37: Microflyte Joystick)
 
 @vindex JoyPort3Device
 @item JoyPort3Device
 Set the device attached to:
-userport joystick adapter port 1 (x64, x64sc, xscpu64, x128, xcbm2, xpet, xvic)
-userport joystick adapter port (x64dtv)
-sid cartridge control port (xplus4).
-(x64, x64sc, x64dtv, xscpu, x128, xcbm2, xpet, xvic, xplus4: 0: None, 1: Joystick, 6: Mouse (CX-22), 17: Sampler (2bit))
+joystick adapter port 1 (x64, x64sc, xscpu64, x128, x64dtv, xcbm2, xcbm5x0, xpet, xvic, xplus4)
+(x64, x64sc, xscpu64, x128, x64dtv, xvic: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+(xplus4: 0: None, 1: Joystick, 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 21: Keypad (Coplin), 24: Keypad (RushWare))
+(xpet, xcbm2: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC))
+(xcbm5x0: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
 
 @vindex JoyPort4Device
 @item JoyPort4Device
 Set the device attached to:
-userport joystick adapter port 2 (x64, x64sc, xscpu64, x128, xcbm2, xpet, xvic)
-(x64, x64sc, xscpu, x128, xcbm2, xpet, xvic, xplus4: 0: None, 1: Joystick, 6: Mouse (CX-22), 17: Sampler (2bit))
+joystick adapter port 2 (x64, x64sc, xscpu64, x128, x64dtv, xcbm2, xcbm5x0, xpet, xvic, xplus4)
+(x64, x64sc, xscpu64, x128, x64dtv, xvic: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+(xplus4: 0: None, 1: Joystick, 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 21: Keypad (Coplin), 24: Keypad (RushWare))
+(xpet, xcbm2: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC))
+(xcbm5x0: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
 
 @vindex JoyPort5Device
 @item JoyPort5Device
 Set the device attached to:
+joystick adapter port 3 (x64, x64sc, xscpu64, x128, x64dtv, xcbm2, xcbm5x0, xpet, xvic, xplus4)
+(x64, x64sc, xscpu64, x128, x64dtv, xvic: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+(xplus4: 0: None, 1: Joystick, 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 21: Keypad (Coplin), 24: Keypad (RushWare))
+(xcbm2: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC))
+(xcbm5x0: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+
+@vindex JoyPort6Device
+@item JoyPort6Device
+Set the device attached to:
+joystick adapter port 4 (x64, x64sc, xscpu64, x128, x64dtv, xcbm2, xcbm5x0, xvic)
 Sid Cartridge on the Plus4 (xplus4)
-(xplus4: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Mouse (CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 17: Sampler (2bit))
+(x64, x64sc, xscpu64, x128, x64dtv, xvic: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+(xplus4: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 22: Keypad (Cardco Cardkey 1), 23: Keypad (Atari CX85), 24: Keypad (RushWare), 25: Keypad (Atari CX21), 29: SNES Pad Adapter (Trapthem), 35: Protopad, 36: Joyport I/O simulation, 37: Microflyte Joystick)
+(xcbm2: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC))
+(xcbm5x0: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+
+@vindex JoyPort7Device
+@item JoyPort7Device
+Set the device attached to:
+joystick adapter port 5 (x64, x64sc, xscpu64, x128, x64dtv, xcbm2, xcbm5x0, xvic)
+(x64, x64sc, xscpu64, x128, x64dtv, xvic: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+(xcbm2: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC))
+(xcbm5x0: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+
+@vindex JoyPort8Device
+@item JoyPort8Device
+Set the device attached to:
+joystick adapter port 6 (x64, x64sc, xscpu64, x128, x64dtv, xcbm2, xcbm5x0, xvic)
+(x64, x64sc, xscpu64, x128, x64dtv, xvic: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+(xcbm2: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC))
+(xcbm5x0: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+
+@vindex JoyPort9Device
+@item JoyPort9Device
+Set the device attached to:
+joystick adapter port 7 (x64, x64sc, xscpu64, x128, x64dtv, xcbm2, xcbm5x0, xvic)
+(x64, x64sc, xscpu64, x128, x64dtv, xvic: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+(xcbm2: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC))
+(xcbm5x0: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+
+@vindex JoyPort10Device
+@item JoyPort10Device
+Set the device attached to:
+joystick adapter port 8 (x64, x64sc, xscpu64, x128, x64dtv, xcbm2, xcbm5x0, xvic)
+(x64, x64sc, xscpu64, x128, x64dtv, xvic: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+(xcbm2: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC))
+(xcbm5x0: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
 
 @vindex BBRTCSave
 @item BBRTCSave
@@ -3592,43 +3646,101 @@ Enable saving of the battery-backed real time clock data.
 @findex -controlport1device
 @item -controlport1device <device>
 Set the device attached to:
-control port 1 (x64, x64sc, x64dtv, xscpu, x128, xcbm5x0, xplus4)
+control port 1 (x64, x64sc, x64dtv, xscpu64, x128, xcbm5x0, xplus4)
 control port (xvic)
 (@code{JoyPort1Device}).
-(x64, x64sc, xscpu, x128, xcbm5x0, xvic: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Mouse (CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 11: Light Pen (up trigger), 12: Light Pen (left trigger), 13: Datel Light Pen, 14: Magnum Light Phaser, 15: Stack Light Rifle, 16: Inkwell Light Pen, 17: Sampler (2bit))
-(x64dtv, xplus4: 0: None, 1: Joystick, 6: Mouse (CX-22), 17: Sampler (2bit))
+(x64, x64sc, xscpu64, x128: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 11: Light Pen (up trigger), 12: Light Pen (left trigger), 13: Light Pen (Datel), 14: Light Gun (Magnum Light Phaser), 15: Light Gun (Stack Light Rifle), 16: Light Pen (Inkwell), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 20: Dongle (Paperclip64), 21: Keypad (Coplin), 22: Keypad (Cardco Cardkey 1), 23: Keypad (Atari CX85), 24: Keypad (RushWare), 25: Keypad (Atari CX21), 26: Dongle (Script 64), 27: Dongle (VizaWrite 64), 28: Dongle (WaaSoft), 29: SNES Pad Adapter (Trapthem), 30: SNES Pad Adapter (Ninja), 31: Joystick Adapter (Spaceballs), 32: Joystick Adapter (Inception), 33: Joystick Adapter (MultiJoy Joysticks), 34: Joystick Adapter (MultiJoy Logic), 35: Protopad, 36: Joyport I/O simulation, 37: Microflyte Joystick)
+(x64dtv: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 20: Dongle (Paperclip64), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 30: SNES Pad Adapter (Ninja), 32: Joystick Adapter (Inception), 33: Joystick Adapter (MultiJoy Joysticks), 34: Joystick Adapter (MultiJoy Logic), 35: Protopad, 36: Joyport I/O simulation)
+(xvic: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 11: Light Pen (up trigger), 12: Light Pen (left trigger), 13: Light Pen (Datel), 14: Light Gun (Magnum Light Phaser), 15: Light Gun (Stack Light Rifle), 16: Light Pen (Inkwell), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 22: Keypad (Cardco Cardkey 1), 23: Keypad (Atari CX85), 24: Keypad (RushWare), 25: Keypad (Atari CX21), 29: SNES Pad Adapter (Trapthem), 30: SNES Pad Adapter (Ninja), 31: Joystick Adapter (Spaceballs), 32: Joystick Adapter (Inception), 35: Protopad, 36: Joyport I/O simulation, 37: Microflyte Joystick)
+(xplus4: 0: None, 1: Joystick, 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 21: Keypad (Coplin), 24: Keypad (RushWare), 36: Joyport I/O simulation)
+(xcbm5x0: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 30: SNES Pad Adapter (Ninja), 32: Joystick Adapter (Inception), 33: Joystick Adapter (MultiJoy Joysticks), 34: Joystick Adapter (MultiJoy Logic), 35: Protopad, 36: Joyport I/O simulation, 37: Microflyte Joystick)
 
 @findex -controlport2device
 @item -controlport2device <device>
 Set the device attached to:
-control port 2 (x64, x64sc, x64dtv, xscpu, x128, xcbm5x0, xplus4)
+control port 2 (x64, x64sc, x64dtv, xscpu64, x128, xcbm5x0, xplus4)
 (@code{JoyPort2Device}).
-(x64, x64sc, xscpu, x128, xcbm5x0: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Mouse (CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 17: Sampler (2bit))
-(x64dtv, xplus4: 0: None, 1: Joystick, 6: Mouse (CX-22), 17: Sampler (2bit))
+(x64, x64sc, xscpu64, x128: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 20: Dongle (Paperclip64), 21: Keypad (Coplin), 22: Keypad (Cardco Cardkey 1), 23: Keypad (Atari CX85), 24: Keypad (RushWare), 25: Keypad (Atari CX21), 26: Dongle (Script 64), 27: Dongle (VizaWrite 64), 28: Dongle (WaaSoft), 29: SNES Pad Adapter (Trapthem), 30: SNES Pad Adapter (Ninja), 31: Joystick Adapter (Spaceballs), 32: Joystick Adapter (Inception), 33: Joystick Adapter (MultiJoy Joysticks), 34: Joystick Adapter (MultiJoy Logic), 35: Protopad, 36: Joyport I/O simulation, 37: Microflyte Joystick)
+(x64dtv: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 20: Dongle (Paperclip64), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 30: SNES Pad Adapter (Ninja), 32: Joystick Adapter (Inception), 33: Joystick Adapter (MultiJoy Joysticks), 34: Joystick Adapter (MultiJoy Logic), 35: Protopad, 36: Joyport I/O simulation)
+(xplus4: 0: None, 1: Joystick, 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 21: Keypad (Coplin), 24: Keypad (RushWare), 36: Joyport I/O simulation)
+(xcbm5x0: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 30: SNES Pad Adapter (Ninja), 32: Joystick Adapter (Inception), 33: Joystick Adapter (MultiJoy Joysticks), 34: Joystick Adapter (MultiJoy Logic), 35: Protopad, 36: Joyport I/O simulation, 37: Microflyte Joystick)
 
 @findex -controlport3device
 @item -controlport3device <device>
 Set the device attached to:
-userport joystick adapter port 1 (x64, x64sc, xscpu, x128, xcbm2, xpet, xvic)
-userport joystick adapter port (x64dtv)
-sid cartridge control port (xplus4)
+joystick adapter port 1 (x64, x64sc, xscpu64, x128, x64dtv, xcbm2, xcbm5x0, xpet, xvic, xplus4)
 (@code{JoyPort3Device}).
-(x64, x64sc, x64dtv, xscpu, x128, xcbm2, xpet, xvic: 0: None, 1: Joystick, 6: Mouse (CX-22), 17: Sampler (2bit))
-(xplus4: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Mouse (CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 17: Sampler (2bit))
+(x64, x64sc, xscpu64, x128, x64dtv, xvic: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+(xplus4: 0: None, 1: Joystick, 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 21: Keypad (Coplin), 24: Keypad (RushWare))
+(xpet, xcbm2: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC))
+(xcbm5x0: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
 
 @findex -controlport4device
 @item -controlport4device <device>
 Set the device attached to:
-userport joystick adapter port 2 (x64, x64sc, xscpu, x128, xcbm2, xpet, xvic)
+joystick adapter port 2 (x64, x64sc, xscpu64, x128, x64dtv, xcbm2, xcbm5x0, xpet, xvic, xplus4)
 (@code{JoyPort4Device}).
-(x64, x64sc, xscpu, x128, xcbm2, xpet, xvic: 0: None, 1: Joystick, 6: Mouse (CX-22), 17: Sampler (2bit))
+(x64, x64sc, xscpu64, x128, x64dtv, xvic: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+(xplus4: 0: None, 1: Joystick, 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 21: Keypad (Coplin), 24: Keypad (RushWare))
+(xpet, xcbm2: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC))
+(xcbm5x0: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
 
 @findex -controlport5device
 @item -controlport5device <device>
 Set the device attached to:
-SID cartridge joystick port (xplus4)
+joystick adapter port 3 (x64, x64sc, xscpu64, x128, x64dtv, xcbm2, xcbm5x0, xpet, xvic, xplus4)
 (@code{JoyPort5Device}).
-(xplus4: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Mouse (CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 17: Sampler (2bit), 18: Sampler (4bit), 19: BBRTC, 20: Paperclip64 dongle, 21: Coplin Keypad, 22: Cardco Cardkey 1 keypad, 23: Atari CX85 keypad, 24: RushWare Keypad, 25: Atari CX21 keypad)
+(x64, x64sc, xscpu64, x128, x64dtv, xvic: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+(xplus4: 0: None, 1: Joystick, 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 21: Keypad (Coplin), 24: Keypad (RushWare))
+(xcbm2: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC))
+(xcbm5x0: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+
+@findex -controlport6device
+@item -controlport6device <device>
+Set the device attached to:
+joystick adapter port 4 (x64, x64sc, xscpu64, x128, x64dtv, xcbm2, xcbm5x0, xvic)
+Sid Cartridge on the Plus4 (xplus4)
+(@code{JoyPort6Device}).
+(x64, x64sc, xscpu64, x128, x64dtv, xvic: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+(xplus4: 0: None, 1: Joystick, 2: Paddles, 3: Mouse (1351), 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 8: Mouse (SmartMouse), 9: Mouse (Micromys), 10: KoalaPad, 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 22: Keypad (Cardco Cardkey 1), 23: Keypad (Atari CX85), 24: Keypad (RushWare), 25: Keypad (Atari CX21), 29: SNES Pad Adapter (Trapthem), 35: Protopad, 36: Joyport I/O simulation, 37: Microflyte Joystick)
+(xcbm2: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC))
+(xcbm5x0: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+
+@findex -controlport7device
+@item -controlport7device <device>
+Set the device attached to:
+joystick adapter port 5 (x64, x64sc, xscpu64, x128, x64dtv, xcbm2, xcbm5x0, xvic)
+(@code{JoyPort7Device}).
+(x64, x64sc, xscpu64, x128, x64dtv, xvic: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+(xcbm2: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC))
+(xcbm5x0: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+
+@findex -controlport8device
+@item -controlport8device <device>
+Set the device attached to:
+joystick adapter port 6 (x64, x64sc, xscpu64, x128, x64dtv, xcbm2, xcbm5x0, xvic)
+(@code{JoyPort8Device}).
+(x64, x64sc, xscpu64, x128, x64dtv, xvic: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+(xcbm2: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC))
+(xcbm5x0: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+
+@findex -controlport9device
+@item -controlport9device <device>
+Set the device attached to:
+joystick adapter port 7 (x64, x64sc, xscpu64, x128, x64dtv, xcbm2, xcbm5x0, xvic)
+(@code{JoyPort9Device}).
+(x64, x64sc, xscpu64, x128, x64dtv, xvic: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+(xcbm2: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC))
+(xcbm5x0: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+
+@findex -controlport10device
+@item -controlport10device <device>
+Set the device attached to:
+joystick adapter port 8 (x64, x64sc, xscpu64, x128, x64dtv, xcbm2, xcbm5x0, xvic)
+(@code{JoyPort10Device}).
+(x64, x64sc, xscpu64, x128, x64dtv, xvic: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 21: Keypad (Coplin), 24: Keypad (RushWare), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
+(xcbm2: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC))
+(xcbm5x0: 0: None, 1: Joystick, 4: Mouse (NEOS), 5: Mouse (Amiga), 6: Trackball (Atari CX-22), 7: Mouse (Atari ST), 17: Sampler (2bit), 18: Sampler (4bit), 19: RTC (BBRTC), 29: SNES Pad Adapter (Trapthem), 35: Protopad)
 
 @findex -bbrtcsave, +bbrtcsave
 @item -bbrtcsave
@@ -3747,18 +3859,6 @@ Integer specifying the amount of fire button presses per second for autofire for
 @item JoyOpposite
 Boolean, if true allow (usually impossible) bitcombinations for opposite directions.
 (all emulators except vsid)
-
-@vindex UserportJoy
-@item UserportJoy
-Boolean to enable/disable extra joysticks
-(all emulators except xcbm5x0 and vsid).
-
-@vindex UserportJoyType
-@item UserportJoyType
-Integer specifying the type of adapter used for the extra joysticks
-(all emulators except xcbm5x0 and vsid).
-(0: Classical Games/Protovision, 1: PET, 2: Hummer, 3: OEM, 4: Digital Excess/Hitmen, 5: Kingsoft, 6: Starbyte)
-4, 5 and 6 are x64, x64sc, xscpu64 and x128 only.
 
 @vindex Mouse
 @item Mouse
@@ -4063,21 +4163,6 @@ Set the amount of presses per second for autofire for extra joystick port 1, 2, 
 Enable/disable opposite joystick directions
 (@code{JoyOpposite=1}, @code{JoyOpposite=0}).
 (all emulators except vsid)
-
-@findex -userportjoy, +userportjoy
-@item -userportjoy
-@itemx +userportjoy
-Enable/disable extra joystick(s)
-(@code{UserportJoy=1}, @code{UserportJoy=0}).
-(all emulators except xcbm5x0 and vsid).
-
-@findex -userportjoytype
-@item -userportjoytype <Type>
-Set extra joystick type
-(@code{UserportJoyType})
-(all emulators except xcbm5x0 and vsid).
-(0: Classical Games/Protovision, 1: PET, 2: Hummer, 3: OEM, 4: Digital Excess/Hitmen, 5: Kingsoft, 6: Starbyte)
-4, 5 and 6 are x64, x64sc, xscpu64 and x128 only.
 
 @findex -mouse, +mouse
 @item -mouse
@@ -5793,10 +5878,6 @@ String specifying the printer output driver.
 Strings specifying the IEC printer output device.
 (text, graphics)
 
-@vindex PrinterUserport
-@item PrinterUserport
-Boolean specifying if the user-port printer is being emulated.
-
 @vindex PrinterUserportTextDevice
 @item PrinterUserportTextDevice
 Integer (ranging from 0 to 2, for device 1-3) specifying what printer
@@ -6420,25 +6501,20 @@ If it is able to detect an
 
 @table @code
 
-@vindex CPClockF83
-@item CPClockF83
-Boolean specifying whether the CP Clock F83 (PCF8583 RTC) is enabled.
+@vindex TapePort1Device
+@item TapePort1Device
+Set the device attached to the (first) tape port:
+(x64, x64sc, x128: 0: None, 1: Datasette, 2: Tape RTC (PCF8583), 3: DTL BASIC dongle, 4: Sense dongle, 5: tapecart)
+(xcbm2, xcbm5x0, xpet, xplus4, xvic: 0: None, 1: Datasette, 2: Tape RTC (PCF8583), 4: Sense dongle)
+
+@vindex TapePort2Device
+@item TapePort2Device
+Set the device attached to the second tape port (xpet only):
+(xpet: 0: None, 1: Datasette, 2: Tape RTC (PCF8583), 4: Sense dongle)
 
 @vindex CPClockF83Save
 @item CPClockF83Save
 Boolean specifying whether the CP Clock F83 (PCF8583 RTC) data is saved when changed.
-
-@vindex TapeSenseDongle
-@item TapeSenseDongle
-Boolean specifying whether the tape sense dongle is enabled.
-
-@vindex DTLBasicDongle
-@item DTLBasicDongle
-Boolean specifying whether the DTL Basic dongle is enabled.
-
-@vindex TapecartEnabled
-@item TapecartEnabled
-Boolean that specifies if a tapecart is attached.
 
 @vindex TapecartUpdateTCRT
 @item TapecartUpdateTCRT
@@ -6468,35 +6544,24 @@ String specifying the file name of the current tapecart image.
 
 @table @code
 
-@findex -cpclockf83, +cpclockf83
-@item -cpclockf83
-@itemx +cpclockf83
-Enable/Disable CP Clock F83 (PCF8583 RTC)
-(@code{CPClockF83=1}, @code{CPClockF83=0}).
+@findex -tapeport1device
+@item -tapeport1device <device>
+Set the device attached to the (first) tape port:
+(@code{TapePort1Device}).
+(x64, x64sc, x128: 0: None, 1: Datasette, 2: Tape RTC (PCF8583), 3: DTL BASIC dongle, 4: Sense dongle, 5: tapecart)
+(xcbm2, xcbm5x0, xpet, xplus4, xvic: 0: None, 1: Datasette, 2: Tape RTC (PCF8583), 4: Sense dongle)
+
+@findex -tapeport2device
+@item -tapeport2device <device>
+Set the device attached to the second tape port:
+(@code{TapePort2Device}).
+(xpet: 0: None, 1: Datasette, 2: Tape RTC (PCF8583), 4: Sense dongle)
 
 @findex -cpclockf83save, +cpclockf83save
 @item -cpclockf83save
 @itemx +cpclockf83save
 Enable/Disable saving of the CP Clock F83 (PCF8583 RTC) data when changed
  (@code{CPClockF83Save=1}, @code{CPClockF83Save=0}).
-
-@findex -tapesensedongle, +tapesensedongle
-@item -tapesensedongle
-@itemx +tapesensedongle
-Enable/Disable tape sense dongle
- (@code{TapeSenseDongle=1}, @code{TapeSenseDongle=0}).
-
-@findex -dtlbasicdongle, +dtlbasicdongle
-@item -dtlbasicdongle
-@itemx +dtlbasicdongle
-Enable/Disable DTL Basic dongle
- (@code{DTLBasicDongle=1}, @code{DTLBasicDongle=0}).
-
-@findex -tapecart, +tapecart
-@item -tapecart
-@itemx +tapecart
-Enable/disable tapecart emulation
-(@code{TapecartEnabled=1}, @code{TapecartEnabled=0})
 
 @findex -tcrt
 @item -tcrt <name>
@@ -6535,37 +6600,19 @@ level 2 adds details of command parameters.
 
 @table @code
 
-@vindex UserportCollisionHandling
-@item UserportCollisionHandling
-Boolean specifying the way the Userport collisions should be handled, (0: error message and
- detach all involved devices, 1: error message and detach last attached involved
- device, 2: warning in log and 'AND' the valid return values)
-
-@vindex UserportDIGIMAX
-@item UserportDIGIMAX
-Boolean specifying whether the userport DigiMAX device is enabled.
-
-@vindex Userport4bitSampler
-@item Userport4bitSampler
-Boolean specifying whether the Userport 4bit sampler is enabled.
-
-@vindex Userport8BSS
-@item Userport8BSS
-Boolean specifying whether the Userport 8bit stereo sampler is enabled.
-
-@vindex UserportRTC58321a
-@item UserportRTC58321a
-Boolean specifying whether the userport RTC is emulated or not
-(xpet, cbm2, x64, x64sc, xscpu64 and x128 only).
+@vindex UserportDevice
+@item UserportDevice
+Set the device attached to the userport:
+(x64, x64sc, x128, xscpu64: 0: None, 1: Userport printer, 2: Userport RS232/Modem, 3: CGA userport joy adapter, 4: PET userport joy adapter, 5: Hummer userport joy adapter, 6: OEM userport joy adapter, 7: HIT userport joy adapter, 8: KingSoft userport joy adapter, 9: StarByte userport joy adapter, 10: Synergy userport joy adapter, 11: Userport DAC, 12: Userport DigiMAX, 13: Userport 4bit sampler, 14: Userport 8bit stereo sampler, 15: Userport RTC (RTC58321A), 16: Userport RTC (DS1307), 17: Userport Petscii SNES pad, 18: Joystick Adapter (Spaceballs), 19: Userport SuperPad64, 20: Userport parallel drive cable, 21: Userport I/O Simulation)
+(x64dtv: 0: None, 5: Hummer userport joy adapter, 21: Userport I/O Simulation)
+(xvic: 0: None, 1: Userport printer, 2: Userport RS232/Modem, 3: CGA userport joy adapter, 4: PET userport joy adapter, 5: Hummer userport joy adapter, 6: OEM userport joy adapter, 10: Synergy userport joy adapter, 11: Userport DAC, 15: Userport RTC (RTC58321A), 16: Userport RTC (DS1307), 17: Userport Petscii SNES pad, 18: Joystick Adapter (Spaceballs), 21: Userport I/O Simulation)
+(xplus4: 0: None, 4: PET userport joy adapter, 5: Hummer userport joy adapter, 6: OEM userport joy adapter, 10: Synergy userport joy adapter, 11: Userport DAC, 20: Userport parallel drive cable, 21: Userport I/O Simulation)
+(xpet: 0: None, 1: Userport printer, 3: CGA userport joy adapter, 4: PET userport joy adapter, 5: Hummer userport joy adapter, 6: OEM userport joy adapter, 10: Synergy userport joy adapter, 11: Userport DAC, 15: Userport RTC (RTC58321A), 16: Userport RTC (DS1307), 17: Userport Petscii SNES pad, 21: Userport I/O Simulation)
+(xcbm2: 0: None, 1: Userport printer, 3: CGA userport joy adapter, 4: PET userport joy adapter, 5: Hummer userport joy adapter, 6: OEM userport joy adapter, 10: Synergy userport joy adapter, 11: Userport DAC, 12: Userport DigiMAX, 13: Userport 4bit sampler, 14: Userport 8bit stereo sampler, 15: Userport RTC (RTC58321A), 16: Userport RTC (DS1307), 17: Userport Petscii SNES pad, 19: Userport SuperPad64, 21: Userport I/O Simulation)
 
 @vindex UserportRTC58321aSave
 @item UserportRTC58321aSave
 Boolean specifying whether the userport RTC data is saved when changed or not
-(xpet, cbm2, x64, x64sc, xscpu64 and x128 only).
-
-@vindex UserportRTCDS1307
-@item UserportRTCDS1307
-Boolean specifying whether the userport RTC is emulated or not
 (xpet, cbm2, x64, x64sc, xscpu64 and x128 only).
 
 @vindex UserportRTCDS1307Save
@@ -6580,50 +6627,22 @@ Boolean specifying whether the userport RTC data is saved when changed or not
 
 @table @code
 
-@findex -userportcollision
-@item -userportcollision
-Select the way the Userport collisions should be handled, (0: error message and
- detach all involved devices, 1: error message and detach last attached involved
- device, 2: warning in log and 'AND' the valid return values)
-(@code{UserportCollisionHandling})
-
- @findex -userportdigimax, +userportdigimax
-@item -userportdigimax
-@itemx +userportdigimax
-Enable/Disable the userport DigiMAX device
-(@code{UserportDIGIMAX=1}, @code{UserportDIGIMAX=0})
-
-@findex -userport4bitsampler, +userport4bitsampler
-@item -userport4bitsampler
-@itemx +userport4bitsampler
-Enable/Disable Userport 4bit sampler
-(@code{Userport4bitSampler=1}, @code{Userport4bitSampler=0})
-
-@findex -userport8bss, +userport8bss
-@item -userport8bss
-@itemx +userport8bss
-Enable/Disable Userport 8bit stereo sampler
-(@code{Userport8BSS=1}, @code{Userport8BSS=0})
-
-@findex -userportrtc58321a, +userportrtc58321a
-@item -userportrtc58321a
-@itemx +userportrtc58321a
-Enable/disable the userport RTC emulation
-(@code{UserportRTC58321a=1}, @code{UserportRTC58321a=0})
-(xpet, cbm2, x64, x64sc, xscpu64 and x128 only).
+@findex -userportdevice
+@item -userport1device <device>
+Set the device attached to the userport:
+(@code{UserportDevice}).
+(x64, x64sc, x128, xscpu64: 0: None, 1: Userport printer, 2: Userport RS232/Modem, 3: CGA userport joy adapter, 4: PET userport joy adapter, 5: Hummer userport joy adapter, 6: OEM userport joy adapter, 7: HIT userport joy adapter, 8: KingSoft userport joy adapter, 9: StarByte userport joy adapter, 10: Synergy userport joy adapter, 11: Userport DAC, 12: Userport DigiMAX, 13: Userport 4bit sampler, 14: Userport 8bit stereo sampler, 15: Userport RTC (RTC58321A), 16: Userport RTC (DS1307), 17: Userport Petscii SNES pad, 18: Joystick Adapter (Spaceballs), 19: Userport SuperPad64, 20: Userport parallel drive cable, 21: Userport I/O Simulation)
+(x64dtv: 0: None, 5: Hummer userport joy adapter, 21: Userport I/O Simulation)
+(xvic: 0: None, 1: Userport printer, 2: Userport RS232/Modem, 3: CGA userport joy adapter, 4: PET userport joy adapter, 5: Hummer userport joy adapter, 6: OEM userport joy adapter, 10: Synergy userport joy adapter, 11: Userport DAC, 15: Userport RTC (RTC58321A), 16: Userport RTC (DS1307), 17: Userport Petscii SNES pad, 18: Joystick Adapter (Spaceballs), 21: Userport I/O Simulation)
+(xplus4: 0: None, 4: PET userport joy adapter, 5: Hummer userport joy adapter, 6: OEM userport joy adapter, 10: Synergy userport joy adapter, 11: Userport DAC, 20: Userport parallel drive cable, 21: Userport I/O Simulation)
+(xpet: 0: None, 1: Userport printer, 3: CGA userport joy adapter, 4: PET userport joy adapter, 5: Hummer userport joy adapter, 6: OEM userport joy adapter, 10: Synergy userport joy adapter, 11: Userport DAC, 15: Userport RTC (RTC58321A), 16: Userport RTC (DS1307), 17: Userport Petscii SNES pad, 21: Userport I/O Simulation)
+(xcbm2: 0: None, 1: Userport printer, 3: CGA userport joy adapter, 4: PET userport joy adapter, 5: Hummer userport joy adapter, 6: OEM userport joy adapter, 10: Synergy userport joy adapter, 11: Userport DAC, 12: Userport DigiMAX, 13: Userport 4bit sampler, 14: Userport 8bit stereo sampler, 15: Userport RTC (RTC58321A), 16: Userport RTC (DS1307), 17: Userport Petscii SNES pad, 19: Userport SuperPad64, 21: Userport I/O Simulation)
 
 @findex -userportrtc58321asave, +userportrtc58321asave
 @item -userportrtc58321asave
 @itemx +userportrtc58321asave
 Disable/enable saving of the userport RTC data when changed
 (@code{UserportRTC58321aSave=1}, @code{UserportRTC58321aSave=0})
-(xpet, cbm2, x64, x64sc, xscpu64 and x128 only).
-
-@findex -userportrtcds1307, +userportrtcds1307
-@item -userportrtcds1307
-@itemx +userportrtcds1307
-Enable/disable the userport RTC emulation
-(@code{UserportRTCDS1307=1}, @code{UserportRTCDS1307=0})
 (xpet, cbm2, x64, x64sc, xscpu64 and x128 only).
 
 @findex -userportrtcds1307save, +userportrtcds1307save
@@ -31637,7 +31656,16 @@ access system which allows CW3, HardSID, ParSID and SSI2001 to
 work on AmigaOS, BeOS, DOS, SDL, *nix and windows with and
 without device drivers. Added clockport system for mmc64,
 mmcreplay, retroreplay and ide64. Added rrnet clockport device.
-Added mp3@@64 clockport device. And lots of other fixes and
+Added mp3@@64 clockport device. Added userport snes pad (petscii)
+support. Extended the joyport system to be able to handle all snes
+pad buttons. Extended the joyport system to be able to handle
+8-player joystick adapters. Added spaceballs joystick adapter
+support. Added trapthem joyport snes pad adapter support. Added
+superpad64 support. Added multijoy joystick adapter support.
+Added inception joystick adapter support. Added protopad support.
+Added autofire support. Added plus4 Synergy 3-port joystick
+adapter support. Added userport I/O simulation device. Added
+Microflyte analog joystick support. And lots of other fixes and
 improvements.
 
 @item

@@ -19,6 +19,105 @@ with the "-default" command line argument or use "restore default config"
 in the UI).
 
 
+* Changes in Vice 3.6
+=====================
+
+We welcome to the team:
+
+June Tate-Gans who added the dual screen mode (for x128) to the SDL UI.
+
+** general
+----------
+
+** build system
+---------------
+
+- Remove linking to vice libraries for petcat and cartconv.
+
+- All targets can now be build seperately (eg make x64sc).
+
+- Fixed building on cygwin.
+
+** Joystick fixes
+-----------------
+
+- New Superpad64 emulation.
+
+- New spaceballs joystick adapter emulation.
+
+- New MultiJoy joystick adapter emulation.
+
+- New Inception joystick adapter emulation.
+
+- New Microflyte analog joystick emulation.
+
+- New userport SNES pad (Petscii) emulation.
+
+- New Trapthem joyport SNES pad emulation.
+
+- New Protopad emulation.
+
+- New plus4 Synergy 3-port joystick adapter emulation.
+
+- Extended Ninja joyport SNES pad adapter to 3 ports.
+
+- All SNES pad buttons are supported now.
+
+- Joystick adapters with more than 1 port are always mapped to the extra joysticks from now on.
+
+- Joystick adapters with only 1 port are mapped to the port they are attached to.
+
+- SIDcard joystick of the plus4 is now always mapped to extra joystick #4.
+
+- New autofire button support.
+
+- New virtual I/O simulation device for the joyport, allows pins to be changed by the user from the monitor.
+
+** Userport fixes
+-----------------
+
+- Only one userport device can be attached to the userport at a time from now on.
+
+- New virtual I/O simulation device for the userport, allows pins to be changed by the user from the monitor.
+
+** Tapeport fixes
+-----------------
+
+- Only one tapeport device can be attached at a time from now on.
+
+** C64 fixes
+------------
+
+- Added REX Ramfloppy loading & saving of the RAM contents.
+
+** C128 fixes
+-------------
+
+- Fixed 2Mhz mode unconnected memory space reads.
+
+** PET fixes
+------------
+
+- New datasette #2 emulation.
+
+** SDL fixes
+------------
+
+- New SDL2 dual window support.
+
+- Removed unneeded items from some SDL menus.
+
+- New D67 image creation menu items.
+
+- Fixed relative paths in the SDL file/directory selection dialog.
+
+- New host joystick axis mapping support for emulated paddles and analog joysticks.
+
+- Mapping of host joysticks menu now shows what the pins are already mapped to.
+
+** GTK3 fixes
+-------------
+
 * Changes in Vice 3.5
 =====================
 

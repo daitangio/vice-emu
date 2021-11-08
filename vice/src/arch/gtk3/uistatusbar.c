@@ -48,22 +48,34 @@
  */
 
 #include "vice.h"
-
 #include <stdio.h>
 #include <gtk/gtk.h>
 
-#include "debug_gtk3.h"
-
 #include "archdep_defs.h"
-#include "vice_gtk3.h"
+#include "attach.h"
+#include "autostart.h"
+#include "contentpreviewwidget.h"
 #include "datasette.h"
-#include "drive.h"
+#include "dirmenupopup.h"
+#include "diskcontents.h"
+#include "diskimage.h"
+#include "diskimage/fsimage.h"
 #include "drive-check.h"
+#include "drive.h"
+#include "drive.h"
+#include "drivetypes.h"
+#include "fliplist.h"
 #include "joyport.h"
+#include "joystickmenupopup.h"
+#include "kbddebugwidget.h"
 #include "lib.h"
 #include "machine.h"
 #include "mainlock.h"
 #include "resources.h"
+#include "statusbarrecordingwidget.h"
+#include "statusbarspeedwidget.h"
+#include "tapecontents.h"
+#include "tapeport.h"
 #include "types.h"
 #include "ui.h"
 #include "uiapi.h"
@@ -72,24 +84,7 @@
 #include "uifliplist.h"
 #include "uisettings.h"
 #include "userport/userport_joystick.h"
-
-#include "attach.h"
-#include "diskcontents.h"
-#include "drive.h"
-#include "drivetypes.h"
-#include "diskimage.h"
-#include "diskimage/fsimage.h"
-#include "autostart.h"
-#include "tapeport.h"
-#include "tapecontents.h"
-#include "fliplist.h"
-
-#include "contentpreviewwidget.h"
-#include "dirmenupopup.h"
-#include "joystickmenupopup.h"
-#include "statusbarspeedwidget.h"
-#include "statusbarrecordingwidget.h"
-#include "kbddebugwidget.h"
+#include "vice_gtk3.h"
 
 #include "uistatusbar.h"
 
@@ -835,8 +830,9 @@ static gboolean ui_do_datasette_popup(GtkWidget *widget,
     } else if (((GdkEventButton *)event)->button == GDK_BUTTON_SECONDARY) {
         GtkWidget *dir_menu;
 
-        dir_menu = dir_menu_popup_create(-1, tapecontents_read,
-                tape_dir_autostart_callback);
+        dir_menu = dir_menu_popup_create(port,
+                                         tapecontents_read,
+                                         tape_dir_autostart_callback);
         gtk_menu_popup_at_widget(GTK_MENU(dir_menu),
                                  widget,
                                  GDK_GRAVITY_NORTH_EAST,
@@ -946,7 +942,7 @@ static gboolean ui_do_drive_popup(GtkWidget *widget, GdkEvent *event, gpointer d
                                  event);
     } else if (((GdkEventButton *)event)->button == GDK_BUTTON_SECONDARY) {
         /* show popup to run file in currently attached image */
-        GtkWidget *dir_menu = dir_menu_popup_create(i,
+        GtkWidget *dir_menu = dir_menu_popup_create(i + DRIVE_UNIT_MIN,
                                                     diskcontents_filesystem_read,
                                                     disk_dir_autostart_callback);
 
@@ -1370,8 +1366,13 @@ static GtkWidget *ui_tape_widget_create(int port)
             GTK_ORIENTATION_HORIZONTAL);
     gtk_widget_set_hexpand(grid, FALSE);
     gtk_widget_set_vexpand(grid, FALSE);
-    g_snprintf(title, sizeof(title), "Tape #%d:", port);
-    header = gtk_label_new(title);
+
+    if (machine_class == VICE_MACHINE_PET) {
+        g_snprintf(title, sizeof(title), "Tape #%d:", port);
+        header = gtk_label_new(title);
+    } else {
+        header = gtk_label_new("Tape:");
+    }
     gtk_widget_set_hexpand(header, FALSE);
     gtk_widget_set_halign(header, GTK_ALIGN_START);
     g_object_set(header, "margin-right", 8, NULL);
@@ -1871,8 +1872,10 @@ GtkWidget *ui_statusbar_create(int window_identity)
                 SB_COL_SEP_CRT, SB_ROW_SEP_CRT, 1, 3);
     }
 
-    if ((machine_class != VICE_MACHINE_C64DTV)
-            && (machine_class != VICE_MACHINE_VSID)) {
+    /* No datasette for DTV, SCPU or VSID */
+    if ((machine_class != VICE_MACHINE_C64DTV) &&
+            (machine_class != VICE_MACHINE_SCPU64) &&
+            (machine_class != VICE_MACHINE_VSID)) {
         tape1 = ui_tape_widget_create(TAPEPORT_UNIT_1);
         g_object_ref_sink(G_OBJECT(tape1));
         /* Clicking the tape status is supposed to pop up a window. This
@@ -1897,6 +1900,7 @@ GtkWidget *ui_statusbar_create(int window_identity)
                 G_CALLBACK(ui_statusbar_cross_cb), &allocated_bars[i]);
     }
 
+    /* Only the PET has two datasettes */
     if (machine_class == VICE_MACHINE_PET) {
         tape2 = ui_tape_widget_create(TAPEPORT_UNIT_2);
         g_object_ref_sink(G_OBJECT(tape2));
