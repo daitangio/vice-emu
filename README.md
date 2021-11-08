@@ -11,9 +11,7 @@ Provide version tags and complete svn history dump.
 
 Wellcome to the  unofficial mirror of SVN trunk of VICE - the Versatile Commodore emulator!
 
-We take extra care to provide version tags and complete svn history dump.
-
-We update it on a daily basis, with a best effort schedule (no fault-tolerance in place right now, no SLA sorry :-)
+We take extra care to provide version tags and complete svn history dump on major releases.
 
 
 # Why 
