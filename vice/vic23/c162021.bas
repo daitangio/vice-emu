@@ -1,35 +1,54 @@
 
 
 ;c162021 ==1001==
-   10 rem anim frames?
-   20 data 4
-   30 rem first number is a float with
-   40 rem <size>,<duration>,...anim
-   50 data 1,2 ,"UQI"
-   60 data 1,2 ,"JQK"
-   70 data 3,5  ,"UQK happy birthday gio","JWK","3-frame data"
-   80 data 1,0,"end"
-   90 scnclr
-  100 for c2=1 to  2
-  110 read frames%
-  120 forc= 1 to frames%
-  130 rem *single frame renderning*
-  140 read anisize,dur%
-  150 for s= 1 to anisize
-  160 read anim$
-  170 print anim$
-  180 next s
-  190 print:print fre(0),ti$,"d:",dur%
-  200 rem how much wait?
-  210 tstart=ti
-  220 do while ti < (tstart+ dur%*5   )
-  230 rem wait
-  240 loop
-  250 scnclr
-  260 next c
-  270 restore
-  280 next c2
-  290 scnclr
-  300 print "backup..."
-  310 dsave "c162021"
+   10 rem tune delay?
+   20 dx%=1.6
+   30 rem anim frames?
+   40 rem first number is a float with
+   50 rem <duration>,frames...,end
+   60 data 35, wellcome,to,the,simple,animation,demo
+   70 data with parametric,data animation,
+   80 data end
+   90 data 3 ,"JQK",end
+  100 data 2 ,"UQI", end
+  110 data 1 ,"JQK",end
+  120 data 1 ,"UQI", end
+  130 data 1 ,"JQK",end
+  140 data 1 ,"UQI", end
+  150 data 1 ,"JQK",end
+  160 data 1 ,"UQI",end
+  170 data 1 ,"JQK",end
+  180 data 1 ,"UQI",end
+  190 data 1 ,"JQK",end
+  200 data 1 ,"UQI",end
+  210 data 1 ,"JQK",end
+  220 data 6 ,"UQK happy birthday gio","JWK","3-frame data",end
+  230 data 0,aniend
+  240 remscnclr
+  250 for c2=1 to  2
+  260 ti$="000000"
+  270 do
+  280 read dur%
+  290 if dur% = 0 then exit
+  300 scnclr
+  310 print
+  320 do
+  330 read anim$
+  340 if anim$="end" then exit
+  350 print anim$
+  360 loop
+  370 print "{home}",ti$,"    d:",dur%
+  380 rem how much wait?
+  390 tstart=ti
+  400 do while ti < (tstart+ dur%*dx% )
+  410 rem debug:
+  420 print"{home}",ti$,(tstart+dur%*dx%)-ti
+  430 loop
+  440 loop: rem new frame loop
+  450 rem  scnclr
+  460 restore
+  470 next c2
+  480 scnclr
+  490 print "backup..."
+  500 dsave "c162021"
 
