@@ -392,8 +392,10 @@ int fsdevice_open(vdrive_t *vdrive, const uint8_t *name, unsigned int length,
 
     // Device23 implementation hook
     if(secondary==3) {
-        DBG(("Device23 Hook 83 "));
+        DBG(("Device23 Hook 83\n"));
         // if (*name == '$') {
+        return FLOPPY_COMMAND_OK;
+
     }
 
 
@@ -407,6 +409,7 @@ int fsdevice_open(vdrive_t *vdrive, const uint8_t *name, unsigned int length,
         for (i = 0; i < length; i++) {
             status = fsdevice_write(vdrive, name[i], 15);
         }
+        DBG(("Command Channel (15)Return %i",status));
         return status;
     }
     cmd_parse.cmd = name;

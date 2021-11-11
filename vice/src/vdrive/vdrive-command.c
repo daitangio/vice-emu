@@ -26,7 +26,14 @@
 
 #include "vice.h"
 
-/* #define DEBUG_DRIVE */
+#define DEBUG_DRIVE
+
+/** GG 202111 Added DBG MAcro */
+#ifdef DEBUG_DRIVE
+#define DBG(x)  printf x
+#else
+#define DBG(x)
+#endif
 
 #include <ctype.h>
 #include <stdio.h>
@@ -1179,6 +1186,7 @@ int vdrive_command_memory_exec(vdrive_t *vdrive, const uint8_t *buf, uint16_t ad
 int vdrive_command_memory_read(vdrive_t *vdrive, const uint8_t *buf, uint16_t addr, unsigned int length)
 {
     unsigned int len = buf[0];
+    DBG(("GG Memory read Address: $ %04X Size: %u\n",addr,length));
 
     if (length < 6) {
         log_warning(vdrive_command_log, 

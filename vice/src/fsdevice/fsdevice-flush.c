@@ -683,7 +683,10 @@ void fsdevice_flush(vdrive_t *vdrive, unsigned int secondary)
     }
 
     DBG(("fsdevice_flush arg:'%s' realarg:'%s'\n", arg, realarg));
-    
+    /** GG Refer to
+     * http://www.infinite-loop.at/Power20/Documentation/Power20-ReadMe/AB-Floppy_Commands.html
+     * For documentarion and simply code examples
+     */
     /*
                                             '41 '71 '81  FD
        i                                      *   *   *   *    initialize disk
@@ -755,7 +758,9 @@ void fsdevice_flush(vdrive_t *vdrive, unsigned int secondary)
 
     */
     if (!strncmp((char *)(fsdevice_dev[dnr].cmdbuf), "M-R", 3)) {
+        DBG(("GG Memory read command\n"));
         er = fsdevice_flush_mr(vdrive, realarg);
+        DBG(("GG Return value %i\n", er));
     } else if (!strncmp((char *)(fsdevice_dev[dnr].cmdbuf), "M-W", 3)) {
         er = fsdevice_flush_mw(vdrive, realarg);
     } else if (!strncmp((char *)(fsdevice_dev[dnr].cmdbuf), "M-E", 3)) {

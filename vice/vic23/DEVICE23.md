@@ -34,6 +34,11 @@ From wikipedia about the [KERNAL](https://en.wikipedia.org/wiki/KERNAL):
 Device numbers, per established documentation, are restricted to the range [0,16]. However, this limitation came from the specific adaptation of the IEEE-488 protocol and, in effect, applies only to external peripherals. With all relevant KERNAL system calls vectored, programmers can intercept system calls to implement virtual devices with any address in the range of [32,256]. 
 
 
+# Vice vdrive
+
+rem m-r lo hi len
+open 1,8,15,"m-r 00 00 01":close 1
+
 # First implementation
 
 First of all we try to use device 8 with secondary channel 3
