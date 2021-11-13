@@ -214,6 +214,12 @@ int kbdbuf_is_empty(void)
     return (int)(mem_read((uint16_t)(num_pending_location)) == 0);
 }
 
+/* Return nonzero if there are keys in the buffer queue */
+int kbdbuf_queue_is_empty(void)
+{
+    return num_pending > 0 ? 0 : 1;
+}
+
 /* Feed `string' into the incoming queue.  */
 static int string_to_queue(const char *string)
 {
@@ -320,9 +326,9 @@ int kbdbuf_feed_runcmd(const char *string)
 void kbdbuf_flush(void)
 {
     static bool prevent_recursion = false;
-    
+
     unsigned int i, n;
-    
+
     /* memory write side effects can end up calling draw handler -> vsync end of line -> kbdbuf_flush infinitely */
     if (prevent_recursion) {
         return;
@@ -345,7 +351,7 @@ void kbdbuf_flush(void)
         if ((queue[head_idx] == 13) && (use_kbdbuf_flush_alarm == 1)) {
             /* we actually need to wait _at least_ one frame to not overrun the buffer */
             kbdbuf_flush_alarm_time = maincpu_clk + (CLOCK)machine_get_cycles_per_frame();
-            kbdbuf_flush_alarm_time += lib_unsigned_rand(1, (CLOCK)machine_get_cycles_per_frame());
+            kbdbuf_flush_alarm_time += lib_unsigned_rand(1, (unsigned int)machine_get_cycles_per_frame());
             alarm_set(kbdbuf_flush_alarm, kbdbuf_flush_alarm_time);
             
             prevent_recursion = false;

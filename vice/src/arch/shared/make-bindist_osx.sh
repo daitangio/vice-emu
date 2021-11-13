@@ -56,7 +56,7 @@ mkdir $BUILD_DIR
 
 # define emulators and command line tools
 EMULATORS="xscpu64 x64dtv x64sc x128 xcbm2 xcbm5x0 xpet xplus4 xvic vsid"
-TOOLS="c1541 petcat cartconv"
+TOOLS="c1541 tools/petcat/petcat tools/cartconv/cartconv"
 
 # define data files for emulators
 ROM_COMMON="DRIVES PRINTER"
@@ -129,6 +129,7 @@ APP_RESOURCES=$APP_CONTENTS/Resources
 APP_ETC=$APP_RESOURCES/etc
 APP_SHARE=$APP_RESOURCES/share
 APP_COMMON=$APP_SHARE/vice/common
+APP_GLSL=$APP_SHARE/vice/GLSL
 APP_ICONS=$APP_SHARE/vice/icons
 APP_ROMS=$APP_SHARE/vice
 APP_DOCS=$APP_SHARE/vice/doc
@@ -380,25 +381,26 @@ fi
 BIN_DIR=$BUILD_DIR/bin
 mkdir $BIN_DIR
 
-for tool in $TOOLS ; do
-  echo -n "  copying tool $tool: "
+for tool_file in $TOOLS ; do
+  tool_name=$(basename $tool_file)
+  echo -n "  copying tool $tool_name: "
 
   # copy binary
   echo -n "[binary] "
-  if [ ! -e src/$tool ]; then
-    echo "ERROR: missing binary: src/$tool"
+  if [ ! -e src/$tool_file ]; then
+    echo "ERROR: missing binary: src/$tool_file"
     exit 1
   fi
-  cp src/$tool $APP_BIN/$tool
+  cp src/$tool_file $APP_BIN/$tool_name
   
   # strip binary
   if [ x"$STRIP" = "xstrip" ]; then
     echo -n "[strip] "
-    /usr/bin/strip $APP_BIN/$tool
+    /usr/bin/strip $APP_BIN/$tool_name
   fi
 
   # copy any needed "local" libs
-  LOCAL_LIBS=`otool -L $APP_BIN/$tool | egrep '^\s+/(opt|usr)/local/' | awk '{print $1}'`
+  LOCAL_LIBS=`otool -L $APP_BIN/$tool_name | egrep '^\s+/(opt|usr)/local/' | awk '{print $1}'`
 
   for lib in $LOCAL_LIBS; do
       copy_lib_recursively $lib
@@ -481,8 +483,8 @@ for lib in $(find $APP_LIB -type f -name '*.dylib' -or -name '*.so'); do
 done
 
 for bin in $BINARIES $TOOLS; do
-  relink $APP_BIN/$bin
-  chmod 555 $APP_BIN/$bin
+  relink $APP_BIN/$(basename $bin)
+  chmod 555 $APP_BIN/$(basename $bin)
 done
 
 if [ "$UI_TYPE" = "GTK3" ]; then
@@ -498,12 +500,12 @@ fi
 echo "  creating command line launchers"
 # TODO replace these with a small C program that we can code sign.
 for emu in $EMULATORS $TOOLS; do
-  cat << "  HEREDOC" | sed 's/^    //' > "$BIN_DIR/$emu"
+  emu=$(basename $emu)
+  cat << "HEREDOC" | sed 's/^    //' > "$BIN_DIR/$emu"
     #!/bin/bash
-    cd $(dirname "$0")
     export PROGRAM="$(basename "$0")"
-    ../VICE.app/Contents/Resources/script "$@"
-  HEREDOC
+    "$(dirname "$0")/../VICE.app/Contents/Resources/script" "$@"
+HEREDOC
   chmod +x "$BIN_DIR/$emu"
 done
 
@@ -543,6 +545,15 @@ if [ "$UI_TYPE" = "GTK3" ]; then
   # --- copy vice.gresource ---
   echo "  copying vice.gresource"
   cp "data/common/vice.gresource" "$APP_COMMON/"
+
+  # --- copy hotkeys files ---
+  cp data/common/*.vhk "$APP_COMMON/"
+
+  # --- copy GLSL shaders ---
+  mkdir -p "$APP_GLSL"
+  for shader in $(find "$TOP_DIR/data/GLSL/" -type f -name '*.vert' -or -name '*.frag'); do
+    cp "$shader" "$APP_GLSL/"
+  done
 fi
 
 
@@ -568,7 +579,7 @@ if [ -n "$CODE_SIGN_ID" ]; then
   done
 
   for bin in $BINARIES $TOOLS ; do
-    code_sign_file $APP_BIN/$bin
+    code_sign_file $APP_BIN/$(basename $bin)
   done
 
   for app in $(find $BUILD_DIR -type d -name '*.app'); do

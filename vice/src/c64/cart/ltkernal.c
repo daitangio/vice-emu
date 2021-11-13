@@ -222,8 +222,8 @@ from the bus until a reset, essentially reconfiguring to a stock system.
 
 */
 
-/* largest supported HD in LTK */
-#define ltk_imagesize  (32 * 1024 * 1024 * 10)
+/* largest supported HD in 512 bytes sectors for LTK for DOS up to 7.3 */
+#define ltk_imagesize  (32 * 1024 * 1024 * 10 / 512)
 
 static int ltk_inserted = 0;
 
@@ -364,6 +364,12 @@ static int set_image_file(const char *name, void *param)
 
     util_string_set(&(ltk_disk[i]), name);
     LOG1((LOG, "LTK image[%d] = '%s'", i, name));
+
+    /* apply changes */
+    if (ltk_inserted) {
+        scsi_image_detach(&ltk_scsi, i << 3);
+        scsi_image_attach(&ltk_scsi, i << 3, ltk_disk[i]);
+    }
 
     return 0;
 }
@@ -513,9 +519,17 @@ int ltkernal_resources_shutdown(void)
 static void ltk_imageopenall(void)
 {
     int32_t i;
-    for (i = 0; i < 7; i++) {
-        scsi_image_attach(&ltk_scsi, i, ltk_disk[i]);
+
+    /* purge out any old or stall file handles */
+    for (i = 0; i < 56; i++) {
+        ltk_scsi.file[i] = NULL;
     }
+
+    /* setup new ones */
+    for (i = 0; i < 7; i++) {
+        scsi_image_attach(&ltk_scsi, i << 3, ltk_disk[i]);
+    }
+
     return;
 }
 
@@ -894,7 +908,7 @@ void ltkernal_freeze(void)
     } else {
         LOG1((LOG, "LTK freeze but no LTK kernal in place; ignoring"));
     }
-    cart_config_changed_slotmain(CMODE_8KGAME, CMODE_ULTIMAX, CMODE_READ |
+    cart_config_changed_slotmain(CMODE_RAM, CMODE_ULTIMAX, CMODE_READ |
         CMODE_RELEASE_FREEZE | CMODE_PHI2_RAM);
 }
 
@@ -915,7 +929,7 @@ void ltkernal_config_init(void)
 #endif
     if ( machine_class == VICE_MACHINE_C64SC ||
         machine_class == VICE_MACHINE_C64 ) {
-        cart_config_changed_slotmain(CMODE_8KGAME, CMODE_ULTIMAX, CMODE_READ |
+        cart_config_changed_slotmain(CMODE_RAM, CMODE_ULTIMAX, CMODE_READ |
             CMODE_PHI2_RAM);
 #ifdef C128
     } else if (machine_inc64mode == 0) {
@@ -996,7 +1010,7 @@ void ltkernal_config_setup(uint8_t *rawcart)
         }
     }
 
-    cart_config_changed_slotmain(0, 3, CMODE_READ | CMODE_PHI2_RAM);
+    cart_config_changed_slotmain(CMODE_RAM, CMODE_ULTIMAX, CMODE_READ | CMODE_PHI2_RAM);
 }
 
 /* ---------------------------------------------------------------------*/
@@ -1007,6 +1021,7 @@ static int ltkernal_common_attach(void)
 
     scsi_reset(&ltk_scsi);
     ltk_scsi.max_imagesize = ltk_imagesize;
+    ltk_scsi.limit_imagesize = ltk_imagesize;
     ltk_scsi.msg_after_status = 1;
 
     if (ltkernal_registerio() < 0) {
@@ -1141,7 +1156,7 @@ int ltkernal_snapshot_read_module(snapshot_t *s)
         goto fail;
     }
 
-    ltkernal_unregisterio();
+    ltkernal_detach();
 
     if (0
         || (SMR_B(m, &ltk_rom) < 0)
@@ -1167,8 +1182,6 @@ int ltkernal_snapshot_read_module(snapshot_t *s)
     if (scsi_snapshot_read_module(&ltk_scsi, s) < 0) {
         return -1;
     }
-
-    ltkernal_registerio();
 
     ltk_imageopenall();
 

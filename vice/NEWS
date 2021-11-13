@@ -19,6 +19,186 @@ with the "-default" command line argument or use "restore default config"
 in the UI).
 
 
+* Changes in Vice 3.6
+=====================
+
+We welcome to the team:
+
+June Tate-Gans who added the dual screen mode (for x128) to the SDL UI.
+
+** general
+----------
+
+** build system
+---------------
+
+- Remove linking to vice libraries for petcat and cartconv.
+
+- All targets can now be build seperately (eg make x64sc).
+
+- Fixed building on cygwin.
+
+** Joystick fixes
+-----------------
+
+- New Superpad64 emulation.
+
+- New spaceballs joystick adapter emulation.
+
+- New MultiJoy joystick adapter emulation.
+
+- New Inception joystick adapter emulation.
+
+- New Microflyte analog joystick emulation.
+
+- New userport SNES pad (Petscii) emulation.
+
+- New Trapthem joyport SNES pad emulation.
+
+- New Protopad emulation.
+
+- New plus4 Synergy 3-port joystick adapter emulation.
+
+- Extended Ninja joyport SNES pad adapter to 3 ports.
+
+- All SNES pad buttons are supported now.
+
+- Joystick adapters with more than 1 port are always mapped to the extra joysticks from now on.
+
+- Joystick adapters with only 1 port are mapped to the port they are attached to.
+
+- SIDcard joystick of the plus4 is now always mapped to extra joystick #4.
+
+- New autofire button support.
+
+- New virtual I/O simulation device for the joyport, allows pins to be changed by the user from the monitor.
+
+** Userport fixes
+-----------------
+
+- Only one userport device can be attached to the userport at a time from now on.
+
+- New virtual I/O simulation device for the userport, allows pins to be changed by the user from the monitor.
+
+** Tapeport fixes
+-----------------
+
+- Only one tapeport device can be attached at a time from now on.
+
+** C64 fixes
+------------
+
+- Added REX Ramfloppy loading & saving of the RAM contents.
+
+** C128 fixes
+-------------
+
+- Fixed 2Mhz mode unconnected memory space reads.
+
+** PET fixes
+------------
+
+- New datasette #2 emulation.
+
+** C1541 fixes
+--------------
+
+- Add `bpoke` command: directly write one or more byte into a block.
+
+- Make the `chain` command accept a '[@unit:]filename' argument.
+
+- Make the `extract` command detect circular track/sector links.
+
+** Monitor fixes
+----------------
+
+- Make the `device` command switch to computer when not given an argument.
+
+- Add `warp [on|off|toggle]` command.
+
+- Fix not being able to delete the final character on a line with DEL.
+
+** SDL fixes
+------------
+
+- New SDL2 dual window support.
+
+- Removed unneeded items from some SDL menus.
+
+- New D67 image creation menu items.
+
+- Fixed relative paths in the SDL file/directory selection dialog.
+
+- New host joystick axis mapping support for emulated paddles and analog joysticks.
+
+- Mapping of host joysticks menu now shows what the pins are already mapped to.
+
+- Add application icons to SDL1.2 binaries.
+
+** GTK3 fixes
+-------------
+
+- Remove sandbox mode
+
+- Fixed statusbar recording status widget display issues.
+
+- Fixed C128 function ROM settings.
+
+- Add setting colors of the monitor.
+
+- Add 'Cartridge -> Default cartridge' to settings. This allows the user to
+  see the current default cartidge, unset it and set another cartridge as
+  default.
+
+- Fix 'extend image' dialog.
+
+- Fix display of joystick names with non-ASCII glyphs.
+
+- Improve widgets setting file paths: use the directory of a file's path in
+  dialogs as the default directory.
+
+- Fix VSID not allowing .MUS files to be added to the playlist.
+
+- Allow unlimited host controllers for josticks
+
+- Fix resetting of scroll position in RAM reset pattern view.
+
+- Fix loading 'vice.ini' inside a Windows bindist: load from the root directory,
+  not the bin/ subdirectory.
+
+- Fix toggling pause mode when taking a quick screenshot.
+
+- Fix various layout issues in the settings.
+
+- Add 'Add current image to fliplist' and 'Clear fliplist' items to drive widget
+  popup menu.
+
+- Remove userport joystick swapping.
+
+- Add swapping of controlport joysticks' emulated devices.
+
+- Add saving/restoring the 'fullscreen decorations' state.
+
+- Add joystick autofire settings.
+
+- Add drive widgets on the statusbar for dual drives.
+
+- Simplify userport devices settings.
+
+- Simplify tapeport devices settings.
+
+- Use checkboxes in menus for toggleable items.
+
+- Add 64x64 pixels icons.
+
+- Fix tape autostart via a tape's 'directory'.
+
+- Fix statusbar layout issues.
+
+- Add customizable keyboard shortcuts ('hotkeys'). See doc/gtk3-hotkeys.md for
+  details.
+
+
 * Changes in Vice 3.5
 =====================
 
@@ -175,9 +355,9 @@ it more reproducible and match the expected standard behaviour:
 - Add --enable-desktop-files for creating and installing .desktop files on Unix.
 
 - Added --enable/disable-html-docs
-- Added --with/without-mpg123 (default=yes), makes MP3-decoding support optional
+- Added --with/without-mpg123 (default=no), makes MP3-decoding support optional
 - Added --with/without-ogg-vorbis
-- Added --with/without-flac (default=yes)
+- Added --with/without-flac (default=no)
 - Update --with[out]-lame, make no default
 - Make jpeg and gif support default to no
 - Make using libpng the default, fail unless explicitly disabled
@@ -2142,7 +2322,7 @@ SDL changes
 - The VICEplus project has been joined with VICE. Thus, x64dtv is now
   part of VICE.
 
-- We can be contacted via IRC: #vice-dev on freenode
+- We can be contacted via IRC: #vice-dev on libera.chat
 
 - Added a more accurate ReSID engine using floating point math (ReSID-FP).
 

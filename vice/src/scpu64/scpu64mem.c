@@ -44,7 +44,6 @@
 #include "cartio.h"
 #include "cartridge.h"
 #include "cia.h"
-#include "clkguard.h"
 #include "machine.h"
 #include "main65816cpu.h"
 #include "mem.h"
@@ -98,12 +97,7 @@ unsigned int mem_simm_ram_mask = 0;
 uint8_t mem_tooslow[1];
 static int traps_pending;
 
-#ifdef USE_EMBEDDED
-#define C64_CHARGEN_ROM_SIZE SCPU64_CHARGEN_ROM_SIZE
-#include "c64chargen.h"
-#else
 uint8_t mem_chargen_rom[SCPU64_CHARGEN_ROM_SIZE];
-#endif
 
 /* Internal color memory.  */
 static uint8_t mem_color_ram[0x400];
@@ -1589,7 +1583,7 @@ static const char *banknames[MAXBANKS + 1] = {
 
 static const int banknums[MAXBANKS + 1] =
 {
-    1,
+    0,
     0,
     1,
     2,

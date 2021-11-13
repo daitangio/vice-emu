@@ -14,6 +14,9 @@
  * $VICERES KoalaOversizeHandling       -vsid
  * $VICERES KoalaUndersizeHandling      -vsid
  * $VICERES KoalaTEDLumHandling         -vsid
+ * $VICERES MinipaintOversizeHandling   -vsid
+ * $VICERES MinipaintUndersizeHandling  -vsid
+ * $VICERES MinipaintTEDLumHandling     -vsid
  */
 
 /*
@@ -44,13 +47,11 @@
 
 #include "gfxoutput.h"
 #include "lib.h"
+#include "log.h"
 #include "machine.h"
 #include "mainlock.h"
-#include "openfiledialog.h"
 #include "resources.h"
-#include "savefiledialog.h"
 #include "screenshot.h"
-#include "selectdirectorydialog.h"
 #include "sound.h"
 #include "statusbarrecordingwidget.h"
 #include "ui.h"
@@ -610,10 +611,6 @@ static void on_save_video_filename(GtkDialog *dialog,
         resources_get_int("FFMPEGAudioCodec", &ac);
         resources_get_int("FFMPEGAudioBitrate", &ab);
 
-        debug_gtk3("Format = '%s'.", driver);
-        debug_gtk3("Video = %d, bitrate %d.", vc, vb);
-        debug_gtk3("Audio = %d, bitrate %d.", ac, ab);
-
         ui_pause_disable();
 
         filename_locale = file_chooser_convert_to_locale(filename);
@@ -741,15 +738,13 @@ static GtkWidget *create_screenshot_param_widget(const char *prefix)
     int row;
     int artstudio = 0;
     int koala = 0;
+    int minipaint = 0;
 
-    grid = gtk_grid_new();
-    gtk_grid_set_column_spacing(GTK_GRID(grid), 16);
-    gtk_grid_set_row_spacing(GTK_GRID(grid), 8);
+    grid = vice_gtk3_grid_new_spaced(VICE_GTK3_DEFAULT, VICE_GTK3_DEFAULT);
 
     /* according to the standard, doing a strcmp() with one or more `NULL`
      * arguments is implementation-defined, so better safe than sorry */
     if (prefix == NULL) {
-        debug_gtk3("some idiot passed NULL.");
         return grid;
     }
 
@@ -761,9 +756,12 @@ static GtkWidget *create_screenshot_param_widget(const char *prefix)
     } else if (strcmp(prefix, "KOALA") == 0) {
         prefix = "Koala";
         koala = 1;
+    } else if (strcmp(prefix, "MINIPAINT") == 0) {
+        prefix = "Minipaint";
+        minipaint = 1;
     }
 
-    if (!koala && !artstudio) {
+    if (!koala && !artstudio && !minipaint) {
         label = gtk_label_new("No parameters required");
         g_object_set(label, "margin-left", 16, NULL);
         gtk_grid_attach(GTK_GRID(grid), label, 0, 0, 1, 1);
@@ -1194,20 +1192,23 @@ gboolean ui_media_stop_recording(GtkWidget *parent, gpointer data)
 void ui_media_auto_screenshot(void)
 {
     char *filename;
-
+#if 0
     /* remember pause state before entering the widget */
     old_pause_state = ui_pause_active();
 
     /* pause emulation */
     ui_pause_enable();
+#endif
 
     /* no need for locale bullshit */
     filename = create_proposed_screenshot_name("png");
     if (screenshot_save("PNG", filename, ui_get_active_canvas()) < 0) {
-        debug_gtk3("OOPS");
+        log_error(LOG_ERR, "Failed to autosave screenshot.");
     }
 
+#if 0
     if (!old_pause_state) {
         ui_pause_disable();
     }
+#endif
 }

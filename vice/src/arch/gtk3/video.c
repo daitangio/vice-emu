@@ -1,5 +1,4 @@
-/**
- * \file video.c
+/** \file video.c
  * \brief Native GTK3 UI video stuff
  *
  * \author Marco van den Heuvel <blackystardust68@yahoo.com>
@@ -149,7 +148,13 @@ static int set_display_depth(int val, void *param)
  */
 static int set_display_filter(int val, void *param)
 {
-    display_filter = val ? 1 : 0;
+    if (val < 0) {
+        val = 0;
+    }
+    if (val > 2) {
+        val = 2;
+    }
+    display_filter = val;
     return 0;
 }
 
@@ -202,7 +207,7 @@ static const cmdline_option_t cmdline_options[] =
       NULL, "Disable vsync to allow screen tearing" },
     { "-gtkfilter", SET_RESOURCE, CMDLINE_ATTRIB_NEED_ARGS,
       NULL, NULL, "GTKFilter", NULL,
-      "<mode>", "Set filtering mode (0 = nearest, 1 = bilinear)" },
+      "<mode>", "Set filtering mode (0 = nearest, 1 = bilinear, 2 = cubic (Windows only))" },
     { "-gtkbackend", SET_RESOURCE, CMDLINE_ATTRIB_NEED_ARGS,
       NULL, NULL, "GTKBackend", NULL,
       "<mode>", "Set rendering mode (0 = Software, 1 = OpenGL)" },
@@ -244,7 +249,7 @@ static const resource_int_t resources_int[] = {
       &vsync, set_vsync, NULL },
     { "DisplayDepth", 0, RES_EVENT_NO, NULL,
       &display_depth, set_display_depth, NULL },
-    { "GTKFilter", 1, RES_EVENT_NO, NULL,
+    { "GTKFilter", 2, RES_EVENT_NO, NULL,
       &display_filter, set_display_filter, NULL },
     { "GTKBackend", 1, RES_EVENT_NO, NULL,
       &render_backend, set_render_backend, NULL },
@@ -263,13 +268,33 @@ static const resource_int_t resources_int_vsid[] = {
 };
 
 
+int video_arch_get_active_chip(void)
+{
+    int window_idx = ui_get_main_window_index();
+
+    switch (window_idx) {
+        case SECONDARY_WINDOW:
+            return VIDEO_CHIP_VDC;
+            break;
+
+        case PRIMARY_WINDOW:
+        default:
+            return VIDEO_CHIP_VICII;
+            break;
+    }
+}
+
 /** \brief  Arch-specific initialization for a video canvas
  *  \param[inout] canvas The canvas being initialized
  *  \sa video_canvas_create
  */
 void video_arch_canvas_init(struct video_canvas_s *canvas)
 {
-    canvas->video_draw_buffer_callback = NULL;
+    /*
+     * the render output can always be read from in GTK3,
+     * it's not a direct video memory buffer.
+     */
+    canvas->videoconfig->readable = 1;
 }
 
 
@@ -314,13 +339,15 @@ char video_canvas_can_resize(video_canvas_t *canvas)
     return 1;
 }
 
-/** \brief Create a new video_canvas_s.
- *  \param[inout] canvas A freshly allocated canvas object.
- *  \param[in]    width  Pointer to a width value. May be NULL if canvas
- *                       size is not yet known.
- *  \param[in]    height Pointer to a height value. May be NULL if canvas
- *                       size is not yet known.
- *  \param        mapped Unused.
+/** \brief  Create a new video_canvas_s.
+ *
+ *  \param[in,out]  canvas  A freshly allocated canvas object.
+ *  \param[in]      width   Pointer to a width value. May be NULL if canvas
+ *                          size is not yet known.
+ *  \param[in]      height  Pointer to a height value. May be NULL if canvas
+ *                          size is not yet known.
+ *  \param          mapped  Unused.
+ *
  *  \return The completely initialized canvas. The window that holds
  *          it will be visible in the UI at time of return.
  */
@@ -329,7 +356,7 @@ video_canvas_t *video_canvas_create(video_canvas_t *canvas,
                                     int mapped)
 {
     pthread_mutexattr_t lock_attributes;
-        
+
     pthread_mutexattr_init(&lock_attributes);
     pthread_mutexattr_settype(&lock_attributes, PTHREAD_MUTEX_RECURSIVE);
     pthread_mutex_init(&canvas->lock, &lock_attributes);

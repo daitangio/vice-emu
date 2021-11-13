@@ -62,6 +62,7 @@
 #include "tick.h"
 #include "types.h"
 #include "uiapi.h"
+#include "util.h"
 #include "version.h"
 #include "video.h"
 #include "vsyncapi.h"
@@ -106,14 +107,40 @@ int main_program(int argc, char **argv)
     int loadconfig = 1;
     char term_tmp[TERM_TMP_SIZE];
     size_t name_len;
+    int reserr;
+    char *cmdline;
+
+    /*
+     * OpenMP defaults to spinning threads for a couple hundred ms
+     * after they are used, which means they max out forever in our
+     * use case. Setting OMP_WAIT_POLICY to PASSIVE fixes that.
+     */
+    
+#if defined(WIN32_COMPILE)
+    _putenv("OMP_WAIT_POLICY=PASSIVE");
+#else
+    setenv("OMP_WAIT_POLICY", "PASSIVE", 1);
+#endif
 
     lib_init();
+
+    /* create string from the commandline that we can log later */
+    cmdline = lib_strdup(argv[0]);
+    for (i = 1; i < argc; i++) {
+        char *p;
+        p = cmdline; /* remember old pointer */
+        cmdline = util_concat(p, " ", argv[i], NULL);
+        lib_free(p); /* free old pointer */
+    }
 
     /* Check for some options at the beginning of the commandline before 
        initializing the user interface or loading the config file.
        -default => use default config, do not load any config
        -config  => use specified configuration file
        -console => no user interface
+       -verbose => more verbose logging
+       -silent => no logging
+       -seed => set the random seed
     */
     DBG(("main:early cmdline(argc:%d)\n", argc));
     for (i = 1; i < argc; i++) {
@@ -126,8 +153,18 @@ int main_program(int argc, char **argv)
                 vice_config_file = lib_strdup(argv[++i]);
                 loadconfig = 1;
             }
-        } else if (!strcmp(argv[i], "-default")) {
+        } else if ((!strcmp(argv[i], "-default")) || (!strcmp(argv[i], "--default"))) {
             loadconfig = 0;
+        } else if ((!strcmp(argv[i], "-verbose")) || (!strcmp(argv[i], "--verbose"))) {
+            log_set_silent(0);
+            log_set_verbose(1);
+        } else if ((!strcmp(argv[i], "-silent")) || (!strcmp(argv[i], "--silent"))) {
+            log_set_silent(1);
+            log_set_verbose(0);
+        } else if ((!strcmp(argv[i], "-seed")) || (!strcmp(argv[i], "--seed"))) {
+            if ((i + 1) < argc) {
+                lib_rand_seed(strtoul(argv[++i], NULL, 0));
+            }
         } else {
             break;
         }
@@ -166,6 +203,12 @@ int main_program(int argc, char **argv)
     /* Initialize system file locator.  */
     sysfile_init(machine_name);
 
+
+    /* hotkeys init needs to be called after sysfile_init() but before the
+     * resources and cmdline options of the hotkeys are registered.
+     */
+    ui_hotkeys_init();
+
     gfxoutput_early_init(ishelp);
     if ((init_resources() < 0) || (init_cmdline_options() < 0)) {
         return -1;
@@ -177,18 +220,18 @@ int main_program(int argc, char **argv)
         return -1;
     }
 
-    /* Initialize the user interface.  `ui_init()' might need to handle the
+    /* Initialize the user interface.  `ui_init_with_args()' might need to handle the
        command line somehow, so we call it before parsing the options.
        (e.g. under X11, the `-display' option is handled independently).  */
     DBG(("main:ui_init(argc:%d)\n", argc));
-    if (!console_mode && ui_init(&argc, argv) < 0) {
-        archdep_startup_log_error("Cannot initialize the UI.\n");
-        return -1;
+    if (!console_mode) {
+        ui_init_with_args(&argc, argv);
     }
 
     if ((!ishelp) && (loadconfig)) {
         /* Load the user's default configuration file.  */
-        if (resources_reset_and_load(NULL) < 0) {
+        reserr = resources_load(NULL);
+        if (reserr < 0 && reserr != RESERR_FILE_NOT_FOUND) {
             /* The resource file might contain errors, and thus certain
             resources might have been initialized anyway.  */
             if (resources_set_defaults() < 0) {
@@ -215,6 +258,13 @@ int main_program(int argc, char **argv)
 
     DBG(("main:initcmdline_check_args(argc:%d)\n", argc));
     if (initcmdline_check_args(argc, argv) < 0) {
+        return -1;
+    }
+
+    /* Initialize the user interface, 2nd part. */
+    DBG(("main:uidata_init(argc:%d)\n", argc));
+    if (!console_mode && ui_init() < 0) {
+        archdep_startup_log_error("Cannot initialize the UI.\n");
         return -1;
     }
 
@@ -271,6 +321,9 @@ int main_program(int argc, char **argv)
     log_message(LOG_DEFAULT, " ");
 
     /* lib_free(program_name); */
+    lib_rand_printseed(); /* log the random seed */
+    log_message(LOG_DEFAULT, "command line was: %s", cmdline);
+    lib_free(cmdline);
 
     /* Complete the GUI initialization (after loading the resources and
        parsing the command-line) if necessary.  */
@@ -285,11 +338,11 @@ int main_program(int argc, char **argv)
     if (initcmdline_check_psid() < 0) {
         return -1;
     }
-    
+
     if (init_main() < 0) {
         return -1;
     }
-    
+
     initcmdline_check_attach();
 
 #ifdef USE_VICE_THREAD
@@ -326,6 +379,11 @@ void vice_thread_shutdown(void)
         /* We're exiting early in program life, such as when invoked with -help */
         return;
     }
+
+    /* log resources with non default values */
+    resources_log_active();
+    /* log the active config as commandline options */
+    cmdline_log_active();
 
     if (pthread_equal(pthread_self(), vice_thread)) {
         printf("FIXME! VICE thread is trying to shut itself down directly, this needs to be called from the ui thread for a correct shutdown!\n");

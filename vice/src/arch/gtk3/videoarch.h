@@ -33,6 +33,7 @@
 
 #include "vice.h"
 
+#include "tick.h"
 #include "viewport.h"
 #include "video.h"
 
@@ -127,6 +128,9 @@ typedef struct video_canvas_s {
     /** \brief Rendering configuration as seen by the emulator
      *         core. */
     struct video_render_config_s *videoconfig;
+
+    /** \brief Tracks color encoding changes */
+    int crt_type;
     
     /** \brief Drawing buffer as seen by the emulator core. */
     struct draw_buffer_s *draw_buffer;
@@ -141,14 +145,13 @@ typedef struct video_canvas_s {
     /** \brief Color palette for translating display results into
      *         window colors. */
     struct palette_s *palette;
-    
-    /** \brief Methods for managing the draw buffer when the core
-     *         rasterizer handles it. */
-    struct video_draw_buffer_callback_s *video_draw_buffer_callback;
 
     /** \brief Which window contains this canvas.
      *  \sa ui_resources_s::canvas The array this value indexes */
     int window_index;
+    
+    /** \brief Used to limit frame rate under warp. */
+    tick_t warp_next_render_tick;
 } video_canvas_t;
 
 /** \brief Rescale and reposition the screen inside the canvas if the

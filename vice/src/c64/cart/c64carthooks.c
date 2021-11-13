@@ -93,6 +93,7 @@
 #include "final3.h"
 #include "formel64.h"
 #include "freezeframe.h"
+#include "freezeframe2.h"
 #include "freezemachine.h"
 #include "funplay.h"
 #include "gamekiller.h"
@@ -100,8 +101,9 @@
 #include "gs.h"
 #include "gmod2.h"
 #include "gmod3.h"
-#include "hero.h"
+#include "drean.h"
 #include "ide64.h"
+#include "ieeeflash64.h"
 #include "isepic.h"
 #include "kcs.h"
 #include "kingsoft.h"
@@ -142,6 +144,7 @@
 #include "superexplode5.h"
 #include "supersnapshot.h"
 #include "supersnapshot4.h"
+#include "turtlegraphics.h"
 #ifdef HAVE_RAWNET
 #include "ethernetcart.h"
 #endif
@@ -299,6 +302,9 @@ static const cmdline_option_t cmdline_options[] =
     { "-cartff", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
       cart_attach_cmdline, (void *)CARTRIDGE_FREEZE_FRAME, NULL, NULL,
       "<Name>", "Attach raw 8KiB Freeze Frame image" },
+    { "-cartff2", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
+      cart_attach_cmdline, (void *)CARTRIDGE_FREEZE_FRAME_MK2, NULL, NULL,
+      "<Name>", "Attach raw 16KiB Freeze Frame MK2/MK3 image" },
     { "-cartfm", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
       cart_attach_cmdline, (void *)CARTRIDGE_FREEZE_MACHINE, NULL, NULL,
       "<Name>", "Attach raw 32KiB Freeze Machine image" },
@@ -320,8 +326,8 @@ static const cmdline_option_t cmdline_options[] =
     { "-cartgs", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
       cart_attach_cmdline, (void *)CARTRIDGE_GS, NULL, NULL,
       "<Name>", "Attach raw 512KiB Game System cartridge image" },
-    { "-carthero", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
-      cart_attach_cmdline, (void *)CARTRIDGE_HERO, NULL, NULL,
+    { "-cartdrean", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
+      cart_attach_cmdline, (void *)CARTRIDGE_DREAN, NULL, NULL,
       "<Name>", "Attach raw 32KiB Hero cartridge image" },
     { "-cartide64", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
       cart_attach_cmdline, (void *)CARTRIDGE_IDE64, NULL, NULL,
@@ -329,6 +335,9 @@ static const cmdline_option_t cmdline_options[] =
     { "-cartieee", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
       cart_attach_cmdline, (void *)CARTRIDGE_IEEE488, NULL, NULL,
       "<Name>", "Attach IEEE-488 Interface cartridge image" },
+    { "-cartieeeflash64", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
+      cart_attach_cmdline, (void *)CARTRIDGE_IEEEFLASH64, NULL, NULL,
+      "<Name>", "Attach raw 8KiB IEEE Flash! 64 cartridge image" },
     { "-cartisepic", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
       cart_attach_cmdline, (void *)CARTRIDGE_ISEPIC, NULL, NULL,
       "<Name>", "Attach raw 2KiB ISEPIC cartridge image" },
@@ -435,16 +444,19 @@ static const cmdline_option_t cmdline_options[] =
       "<Name>", "Attach raw 32KiB Super Snapshot V4 cartridge image" },
     { "-cartss5", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
       cart_attach_cmdline, (void *)CARTRIDGE_SUPER_SNAPSHOT_V5, NULL, NULL,
-      "<Name>", "Attach raw 64KiB Super Snapshot V5 cartridge image" },
+      "<Name>", "Attach raw 64KiB or 128KiB Super Snapshot V5 cartridge image" },
     { "-cartstar", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
       cart_attach_cmdline, (void *)CARTRIDGE_STARDOS, NULL, NULL,
       "<Name>", "Attach raw 16KiB Stardos cartridge image" },
+    { "-cartturtle", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
+      cart_attach_cmdline, (void *)CARTRIDGE_TURTLE_GRAPHICS_II, NULL, NULL,
+      "<Name>", "Attach raw 16KiB " CARTRIDGE_NAME_TURTLE_GRAPHICS_II " cartridge image" },
     { "-cartwl", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
       cart_attach_cmdline, (void *)CARTRIDGE_WESTERMANN, NULL, NULL,
       "<Name>", "Attach raw 16KiB Westermann Learning cartridge image" },
     { "-cartws", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
       cart_attach_cmdline, (void *)CARTRIDGE_WARPSPEED, NULL, NULL,
-      "<Name>", "Attach raw 8KiB Warp Speed cartridge image" },
+      "<Name>", "Attach raw 16KiB " CARTRIDGE_NAME_WARPSPEED " cartridge image" },
     { "-cartzaxxon", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
       cart_attach_cmdline, (void *)CARTRIDGE_ZAXXON, NULL, NULL,
       "<Name>", "Attach raw 16KiB Zaxxon cartridge image" },
@@ -486,10 +498,13 @@ int cart_cmdline_options_init(void)
         || gmod2_cmdline_options_init() < 0
         || gmod3_cmdline_options_init() < 0
         || ide64_cmdline_options_init() < 0
+        || ieeeflash64_cmdline_options_init() < 0
         || ltkernal_cmdline_options_init() < 0
         || mmcreplay_cmdline_options_init() < 0
         || ramlink_cmdline_options_init() < 0
         || retroreplay_cmdline_options_init() < 0
+        || rexramfloppy_cmdline_options_init() < 0
+        || rgcd_cmdline_options_init() < 0
 #ifdef HAVE_RAWNET
         || rrnetmk3_cmdline_options_init() < 0
 #endif
@@ -522,6 +537,7 @@ int cart_resources_init(void)
     if (mmc64_resources_init() < 0
         || magicvoice_resources_init() < 0
         || tpi_resources_init() < 0
+        || ieeeflash64_resources_init() < 0
         /* "Slot 1" */
         || expert_resources_init() < 0
         || dqbb_resources_init() < 0
@@ -552,6 +568,8 @@ int cart_resources_init(void)
         || mmcreplay_resources_init() < 0
         || ramlink_resources_init() < 0
         || retroreplay_resources_init() < 0
+        || rexramfloppy_resources_init() < 0
+        || rgcd_resources_init() < 0
 #ifdef HAVE_RAWNET
         || rrnetmk3_resources_init() < 0
 #endif
@@ -601,6 +619,8 @@ void cart_resources_shutdown(void)
     mmcreplay_resources_shutdown();
     ramlink_resources_shutdown();
     retroreplay_resources_shutdown();
+    rexramfloppy_resources_shutdown();
+    rgcd_resources_shutdown();
 #ifdef HAVE_RAWNET
     rrnetmk3_resources_shutdown();
 #endif
@@ -616,6 +636,7 @@ void cart_resources_shutdown(void)
     mmc64_resources_shutdown();
     magicvoice_resources_shutdown();
     tpi_resources_shutdown();
+    ieeeflash64_resources_shutdown();
 }
 
 /* ------------------------------------------------------------------------- */
@@ -628,6 +649,7 @@ int cart_is_slotmain(int type)
     switch (type) {
         /* slot 0 */
         case CARTRIDGE_IEEE488:
+        case CARTRIDGE_IEEEFLASH64:
         case CARTRIDGE_MAGIC_VOICE:
         case CARTRIDGE_MMC64:
         /* slot 1 */
@@ -666,6 +688,9 @@ int cart_getid_slot0(void)
     if (tpi_cart_enabled()) {
         return CARTRIDGE_IEEE488;
     }
+    if (ieeeflash64_cart_enabled()) {
+        return CARTRIDGE_IEEEFLASH64;
+    }
     return CARTRIDGE_NONE;
 }
 
@@ -699,6 +724,8 @@ int cart_type_enabled(int type)
         /* "Slot 0" */
         case CARTRIDGE_IEEE488:
             return tpi_cart_enabled();
+        case CARTRIDGE_IEEEFLASH64:
+            return ieeeflash64_cart_enabled();
         case CARTRIDGE_MAGIC_VOICE:
             return magicvoice_cart_enabled();
         case CARTRIDGE_MMC64:
@@ -774,6 +801,8 @@ const char *cart_get_file_name(int type)
         /* "Slot 0" */
         case CARTRIDGE_IEEE488:
             return tpi_get_file_name();
+        case CARTRIDGE_IEEEFLASH64:
+            return ieeeflash64_get_file_name();
         case CARTRIDGE_MAGIC_VOICE:
             return magicvoice_get_file_name();
         case CARTRIDGE_MMC64:
@@ -845,6 +874,8 @@ int cart_bin_attach(int type, const char *filename, uint8_t *rawcart)
         /* "Slot 0" */
         case CARTRIDGE_IEEE488:
             return tpi_bin_attach(filename, rawcart);
+        case CARTRIDGE_IEEEFLASH64:
+            return ieeeflash64_bin_attach(filename, rawcart);
         case CARTRIDGE_MAGIC_VOICE:
             return magicvoice_bin_attach(filename, rawcart);
         case CARTRIDGE_MMC64:
@@ -918,6 +949,8 @@ int cart_bin_attach(int type, const char *filename, uint8_t *rawcart)
             return formel64_bin_attach(filename, rawcart);
         case CARTRIDGE_FREEZE_FRAME:
             return freezeframe_bin_attach(filename, rawcart);
+        case CARTRIDGE_FREEZE_FRAME_MK2:
+            return freezeframe2_bin_attach(filename, rawcart);
         case CARTRIDGE_FREEZE_MACHINE:
             return freezemachine_bin_attach(filename, rawcart);
         case CARTRIDGE_FUNPLAY:
@@ -934,8 +967,8 @@ int cart_bin_attach(int type, const char *filename, uint8_t *rawcart)
             return gmod3_bin_attach(filename, rawcart);
         case CARTRIDGE_GS:
             return gs_bin_attach(filename, rawcart);
-        case CARTRIDGE_HERO:
-            return hero_bin_attach(filename, rawcart);
+        case CARTRIDGE_DREAN:
+            return drean_bin_attach(filename, rawcart);
         case CARTRIDGE_IDE64:
             return ide64_bin_attach(filename, rawcart);
         case CARTRIDGE_KCS_POWER:
@@ -1002,6 +1035,8 @@ int cart_bin_attach(int type, const char *filename, uint8_t *rawcart)
             return supersnapshot_v4_bin_attach(filename, rawcart);
         case CARTRIDGE_SUPER_SNAPSHOT_V5:
             return supersnapshot_v5_bin_attach(filename, rawcart);
+        case CARTRIDGE_TURTLE_GRAPHICS_II:
+            return turtlegraphics_bin_attach(filename, rawcart);
         case CARTRIDGE_ULTIMAX:
             return generic_ultimax_bin_attach(filename, rawcart);
         case CARTRIDGE_WARPSPEED:
@@ -1028,6 +1063,9 @@ void cart_attach(int type, uint8_t *rawcart)
         /* "Slot 0" */
         case CARTRIDGE_IEEE488:
             tpi_config_setup(rawcart);
+            break;
+        case CARTRIDGE_IEEEFLASH64:
+            ieeeflash64_config_setup(rawcart);
             break;
         case CARTRIDGE_MAGIC_VOICE:
             magicvoice_config_setup(rawcart);
@@ -1134,6 +1172,9 @@ void cart_attach(int type, uint8_t *rawcart)
         case CARTRIDGE_FREEZE_FRAME:
             freezeframe_config_setup(rawcart);
             break;
+        case CARTRIDGE_FREEZE_FRAME_MK2:
+            freezeframe2_config_setup(rawcart);
+            break;
         case CARTRIDGE_FREEZE_MACHINE:
             freezemachine_config_setup(rawcart);
             break;
@@ -1158,8 +1199,8 @@ void cart_attach(int type, uint8_t *rawcart)
         case CARTRIDGE_GS:
             gs_config_setup(rawcart);
             break;
-        case CARTRIDGE_HERO:
-            hero_config_setup(rawcart);
+        case CARTRIDGE_DREAN:
+            drean_config_setup(rawcart);
             break;
         case CARTRIDGE_IDE64:
             ide64_config_setup(rawcart);
@@ -1259,6 +1300,9 @@ void cart_attach(int type, uint8_t *rawcart)
         case CARTRIDGE_SUPER_SNAPSHOT_V5:
             supersnapshot_v5_config_setup(rawcart);
             break;
+        case CARTRIDGE_TURTLE_GRAPHICS_II:
+            turtlegraphics_config_setup(rawcart);
+            break;
         case CARTRIDGE_ULTIMAX:
             generic_ultimax_config_setup(rawcart);
             break;
@@ -1284,6 +1328,7 @@ void cart_attach(int type, uint8_t *rawcart)
 static int slot0conflicts[] =
 {
     CARTRIDGE_IEEE488,
+    CARTRIDGE_IEEEFLASH64,
     CARTRIDGE_MAGIC_VOICE,
     CARTRIDGE_MMC64,
     0
@@ -1338,6 +1383,9 @@ int cartridge_enable(int type)
         /* "Slot 0" */
         case CARTRIDGE_IEEE488:
             tpi_enable();
+            break;
+        case CARTRIDGE_IEEEFLASH64:
+            ieeeflash64_enable();
             break;
         case CARTRIDGE_MAGIC_VOICE:
             magicvoice_enable();
@@ -1431,6 +1479,9 @@ int cartridge_disable(int type)
         case CARTRIDGE_IEEE488:
             tpi_disable();
             break;
+        case CARTRIDGE_IEEEFLASH64:
+            ieeeflash64_disable();
+            break;
         case CARTRIDGE_MAGIC_VOICE:
             magicvoice_disable();
             break;
@@ -1514,10 +1565,12 @@ int cartridge_disable(int type)
 void cart_detach_all(void)
 {
     DBG(("CART: detach all\n"));
+    debugcart_detach();
     /* "slot 0" */
     tpi_detach();
     magicvoice_detach();
     mmc64_detach();
+    ieeeflash64_detach();
     /* "Slot 1" */
     dqbb_detach();
     expert_detach();
@@ -1559,6 +1612,9 @@ void cart_detach(int type)
         /* "Slot 0" */
         case CARTRIDGE_IEEE488:
             tpi_detach();
+            break;
+        case CARTRIDGE_IEEEFLASH64:
+            ieeeflash64_detach();
             break;
         case CARTRIDGE_MAGIC_VOICE:
             magicvoice_detach();
@@ -1696,6 +1752,9 @@ void cart_detach(int type)
         case CARTRIDGE_FREEZE_FRAME:
             freezeframe_detach();
             break;
+        case CARTRIDGE_FREEZE_FRAME_MK2:
+            freezeframe2_detach();
+            break;
         case CARTRIDGE_FREEZE_MACHINE:
             freezemachine_detach();
             break;
@@ -1720,8 +1779,8 @@ void cart_detach(int type)
         case CARTRIDGE_GS:
             gs_detach();
             break;
-        case CARTRIDGE_HERO:
-            hero_detach();
+        case CARTRIDGE_DREAN:
+            drean_detach();
             break;
         case CARTRIDGE_IDE64:
             ide64_detach();
@@ -1821,6 +1880,9 @@ void cart_detach(int type)
         case CARTRIDGE_SUPER_SNAPSHOT_V5:
             supersnapshot_v5_detach();
             break;
+        case CARTRIDGE_TURTLE_GRAPHICS_II:
+            turtlegraphics_detach();
+            break;
         case CARTRIDGE_ULTIMAX:
             generic_ultimax_detach();
             break;
@@ -1851,6 +1913,7 @@ void cart_init(void)
     mmc64_init();
     magicvoice_init();
     tpi_init();
+    /* ieeeflash64_init(); */
 
     /* "Slot 1" */
     ramcart_init();
@@ -1896,6 +1959,7 @@ void cartridge_shutdown(void)
     tpi_shutdown();
     magicvoice_shutdown();
     /* mmc64_shutdown(); */
+    /* ieeeflash64_shutdown(); */
 
     /* "Main Slot" */
     /* "Slot 1" */
@@ -1987,6 +2051,9 @@ void cartridge_init_config(void)
         case CARTRIDGE_FREEZE_FRAME:
             freezeframe_config_init();
             break;
+        case CARTRIDGE_FREEZE_FRAME_MK2:
+            freezeframe2_config_init();
+            break;
         case CARTRIDGE_FREEZE_MACHINE:
             freezemachine_config_init();
             break;
@@ -2011,8 +2078,8 @@ void cartridge_init_config(void)
         case CARTRIDGE_GS:
             gs_config_init();
             break;
-        case CARTRIDGE_HERO:
-            hero_config_init();
+        case CARTRIDGE_DREAN:
+            drean_config_init();
             break;
         case CARTRIDGE_IDE64:
             ide64_config_init();
@@ -2112,6 +2179,9 @@ void cartridge_init_config(void)
         case CARTRIDGE_SUPER_GAMES:
             supergames_config_init();
             break;
+        case CARTRIDGE_TURTLE_GRAPHICS_II:
+            turtlegraphics_config_init();
+            break;
         case CARTRIDGE_ULTIMAX:
             generic_ultimax_config_init();
             break;
@@ -2159,6 +2229,8 @@ void cartridge_init_config(void)
         mmc64_config_init(&export_passthrough);
     } else if (tpi_cart_enabled()) {
         tpi_config_init(&export_passthrough);
+    } else if (ieeeflash64_cart_enabled()) {
+        ieeeflash64_config_init(&export_passthrough);
     }
 }
 
@@ -2235,6 +2307,9 @@ void cartridge_reset(void)
         case CARTRIDGE_FORMEL64:
             formel64_reset();
             break;
+        case CARTRIDGE_FREEZE_FRAME_MK2:
+            freezeframe2_reset();
+            break;
         case CARTRIDGE_FREEZE_MACHINE:
             freezemachine_reset();
             break;
@@ -2267,8 +2342,11 @@ void cartridge_reset(void)
         case CARTRIDGE_RETRO_REPLAY:
             retroreplay_reset();
             break;
-        case CARTRIDGE_ZIPPCODE48:
+        case CARTRIDGE_WARPSPEED:
             zippcode48_reset();
+            break;
+        case CARTRIDGE_ZIPPCODE48:
+            warpspeed_reset();
             break;
     }
     /* "Slot 1" */
@@ -2294,6 +2372,9 @@ void cartridge_reset(void)
     if (mmc64_cart_enabled()) {
         mmc64_reset();
     }
+    if (ieeeflash64_cart_enabled()) {
+        ieeeflash64_reset();
+    }
     if (cpmcart_cart_enabled()) {
         cpmcart_reset();
     }
@@ -2304,7 +2385,7 @@ void cartridge_reset(void)
 /* called by cart_nmi_alarm_triggered, after an alarm occured */
 static void cart_freeze(int type)
 {
-    DBG(("CART: freeze\n"));
+    DBG(("CART: freeze (type:%d)\n", type));
     switch (type) {
         /* "Slot 0" (no freezer carts) */
         /* "Slot 1" */
@@ -2348,6 +2429,9 @@ static void cart_freeze(int type)
             break;
         case CARTRIDGE_FREEZE_FRAME:
             freezeframe_freeze();
+            break;
+        case CARTRIDGE_FREEZE_FRAME_MK2:
+            freezeframe2_freeze();
             break;
         case CARTRIDGE_FREEZE_MACHINE:
             freezemachine_freeze();
@@ -2424,6 +2508,7 @@ int cart_freeze_allowed(void)
         case CARTRIDGE_FINAL_III:
         case CARTRIDGE_FINAL_PLUS:
         case CARTRIDGE_FREEZE_FRAME:
+        case CARTRIDGE_FREEZE_FRAME_MK2:
         case CARTRIDGE_FREEZE_MACHINE:
         case CARTRIDGE_GAME_KILLER:
         case CARTRIDGE_KCS_POWER:
@@ -2484,6 +2569,8 @@ int cartridge_flush_image(int type)
             return ramlink_flush_image();
         case CARTRIDGE_RETRO_REPLAY:
             return retroreplay_flush_image();
+        case CARTRIDGE_REX_RAMFLOPPY:
+            return rexramfloppy_flush_image();
 #ifdef HAVE_RAWNET
         case CARTRIDGE_RRNETMK3:
             return rrnetmk3_flush_image();
@@ -2536,6 +2623,8 @@ int cartridge_bin_save(int type, const char *filename)
             return ramlink_bin_save(filename);
         case CARTRIDGE_RETRO_REPLAY:
             return retroreplay_bin_save(filename);
+        case CARTRIDGE_REX_RAMFLOPPY:
+            return rexramfloppy_bin_save(filename);
 #ifdef HAVE_RAWNET
         case CARTRIDGE_RRNETMK3:
             return rrnetmk3_bin_save(filename);
@@ -2637,6 +2726,7 @@ void cartridge_sound_chip_init(void)
 */
 void cartridge_mmu_translate(unsigned int addr, uint8_t **base, int *start, int *limit)
 {
+    /* DBG(("CARTHOOKS: cartridge_mmu_translate(%x)\n",addr)); */
     int res = CART_READ_THROUGH;
 #if 0
     /* disable all the mmu translation stuff for testing */
@@ -2656,6 +2746,10 @@ void cartridge_mmu_translate(unsigned int addr, uint8_t **base, int *start, int 
         }
     } else if (tpi_cart_enabled()) {
         if ((res = tpi_mmu_translate(addr, base, start, limit)) == CART_READ_VALID) {
+            return;
+        }
+    } else if (ieeeflash64_cart_enabled()) {
+        if ((res = ieeeflash64_mmu_translate(addr, base, start, limit)) == CART_READ_VALID) {
             return;
         }
     }
@@ -2800,8 +2894,8 @@ int cartridge_snapshot_write_modules(struct snapshot_s *s)
         || SMW_B(m, (uint8_t)export_ram) < 0
         || SMW_B(m, export.ultimax_phi1) < 0
         || SMW_B(m, export.ultimax_phi2) < 0
-        || SMW_DW(m, (uint32_t)cart_freeze_alarm_time) < 0
-        || SMW_DW(m, (uint32_t)cart_nmi_alarm_time) < 0
+        || SMW_CLOCK(m, cart_freeze_alarm_time) < 0
+        || SMW_CLOCK(m, cart_nmi_alarm_time) < 0
         || SMW_B(m, export_slot1.game) < 0
         || SMW_B(m, export_slot1.exrom) < 0
         || SMW_B(m, export_slot1.ultimax_phi1) < 0
@@ -2844,6 +2938,11 @@ int cartridge_snapshot_write_modules(struct snapshot_s *s)
                 break;
             case CARTRIDGE_IEEE488:
                 if (tpi_snapshot_write_module(s) < 0) {
+                    return -1;
+                }
+                break;
+            case CARTRIDGE_IEEEFLASH64:
+                if (ieeeflash64_snapshot_write_module(s) < 0) {
                     return -1;
                 }
                 break;
@@ -3006,6 +3105,11 @@ int cartridge_snapshot_write_modules(struct snapshot_s *s)
                     return -1;
                 }
                 break;
+            case CARTRIDGE_FREEZE_FRAME_MK2:
+                if (freezeframe2_snapshot_write_module(s) < 0) {
+                    return -1;
+                }
+                break;
             case CARTRIDGE_FREEZE_MACHINE:
                 if (freezemachine_snapshot_write_module(s) < 0) {
                     return -1;
@@ -3043,8 +3147,8 @@ int cartridge_snapshot_write_modules(struct snapshot_s *s)
                     return -1;
                 }
                 break;
-            case CARTRIDGE_HERO:
-                if (hero_snapshot_write_module(s) < 0) {
+            case CARTRIDGE_DREAN:
+                if (drean_snapshot_write_module(s) < 0) {
                     return -1;
                 }
                 break;
@@ -3210,6 +3314,11 @@ int cartridge_snapshot_write_modules(struct snapshot_s *s)
                     return -1;
                 }
                 break;
+            case CARTRIDGE_TURTLE_GRAPHICS_II:
+                if (turtlegraphics_snapshot_write_module(s) < 0) {
+                    return -1;
+                }
+                break;
             case CARTRIDGE_WARPSPEED:
                 if (warpspeed_snapshot_write_module(s) < 0) {
                     return -1;
@@ -3356,8 +3465,8 @@ int cartridge_snapshot_read_modules(struct snapshot_s *s)
         || SMR_B_INT(m, &export_ram) < 0
         || SMR_B(m, &export.ultimax_phi1) < 0
         || SMR_B(m, &export.ultimax_phi2) < 0
-        || SMR_DW(m, &cart_freeze_alarm_time) < 0
-        || SMR_DW(m, &cart_nmi_alarm_time) < 0
+        || SMR_CLOCK(m, &cart_freeze_alarm_time) < 0
+        || SMR_CLOCK(m, &cart_nmi_alarm_time) < 0
         || SMR_B(m, &export_slot1.game) < 0
         || SMR_B(m, &export_slot1.exrom) < 0
         || SMR_B(m, &export_slot1.ultimax_phi1) < 0
@@ -3400,6 +3509,11 @@ int cartridge_snapshot_read_modules(struct snapshot_s *s)
                 break;
             case CARTRIDGE_IEEE488:
                 if (tpi_snapshot_read_module(s) < 0) {
+                    goto fail2;
+                }
+                break;
+            case CARTRIDGE_IEEEFLASH64:
+                if (ieeeflash64_snapshot_read_module(s) < 0) {
                     goto fail2;
                 }
                 break;
@@ -3562,6 +3676,11 @@ int cartridge_snapshot_read_modules(struct snapshot_s *s)
                     goto fail2;
                 }
                 break;
+            case CARTRIDGE_FREEZE_FRAME_MK2:
+                if (freezeframe2_snapshot_read_module(s) < 0) {
+                    goto fail2;
+                }
+                break;
             case CARTRIDGE_FREEZE_MACHINE:
                 if (freezemachine_snapshot_read_module(s) < 0) {
                     goto fail2;
@@ -3599,8 +3718,8 @@ int cartridge_snapshot_read_modules(struct snapshot_s *s)
                     goto fail2;
                 }
                 break;
-            case CARTRIDGE_HERO:
-                if (hero_snapshot_read_module(s) < 0) {
+            case CARTRIDGE_DREAN:
+                if (drean_snapshot_read_module(s) < 0) {
                     goto fail2;
                 }
                 break;
@@ -3763,6 +3882,11 @@ int cartridge_snapshot_read_modules(struct snapshot_s *s)
                 break;
             case CARTRIDGE_SUPER_SNAPSHOT_V5:
                 if (supersnapshot_v5_snapshot_read_module(s) < 0) {
+                    goto fail2;
+                }
+                break;
+            case CARTRIDGE_TURTLE_GRAPHICS_II:
+                if (turtlegraphics_snapshot_read_module(s) < 0) {
                     goto fail2;
                 }
                 break;

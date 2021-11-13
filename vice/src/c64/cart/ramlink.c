@@ -1404,7 +1404,7 @@ uint8_t ramlink_a000_bfff_read(uint16_t addr)
         val = roml_banks[rl_rombase | 0x2000 | (addr & 0x1fff)];
     } else {
         /* get from ram based on $1 */
-        if ((~pport.dir | pport.data) & 1) {
+        if (((~pport.dir | pport.data) & 3) == 3) {
             val = mem_bank_read(2, 0xa000 | (addr & 0x1fff), NULL);
         } else {
             val = mem_read_without_ultimax(addr);
@@ -1425,18 +1425,23 @@ int ramlink_peek_mem(export_t *ex, uint16_t addr, uint8_t *value)
     /* read through doesn't work properly with ultimax so we try to
         do everything here */
 
-    if (((~pport.dir | pport.data) & 1) && addr >= 0x8000 && addr <= 0xbfff) {
-        if (rl_enabled && rl_dos) {
-            if (addr >= 0x8000 && addr <= 0xbfff) {
-                *value = roml_banks[rl_rombase | (addr & 0x3fff)];
-                return CART_READ_VALID;
-            }
-        } else if (addr >= 0xa000) {
-            *value = mem_bank_read(2, addr, NULL);
+    if (addr >= 0x8000 && addr <= 0x9fff) {
+        if (rl_dos && rl_enabled) {
+            *value = roml_banks[rl_rombase | (addr & 0x3fff)];
             return CART_READ_VALID;
         }
-    }
-    if (((~pport.dir | pport.data) & 2) && addr >= 0xe000) {
+    } else if (addr >= 0xa000 && addr <= 0xbfff) {
+        if (rl_dos && rl_enabled) {
+            *value = roml_banks[rl_rombase | (addr & 0x3fff)];
+            return CART_READ_VALID;
+        } else {
+            /* get from ram based on $1 */
+            if (((~pport.dir | pport.data) & 3) == 3) {
+                *value = mem_bank_read(2, addr, NULL);
+                return CART_READ_VALID;
+            }
+        }
+    } else if (addr >= 0xe000 && ((~pport.dir | pport.data) & 2)) {
         if (rl_enabled) {
             if (rl_on) {
                 *value = roml_banks[rl_kernbase | (addr & 0x1fff)];
@@ -1466,7 +1471,7 @@ void ramlink_config_init(void)
     /* future code will have 128 stuff in here too once we have a cart API */
     if ( machine_class == VICE_MACHINE_C64SC ||
         machine_class == VICE_MACHINE_C64 ) {
-        cart_config_changed_slotmain(CMODE_8KGAME, CMODE_ULTIMAX, CMODE_READ |
+        cart_config_changed_slotmain(CMODE_RAM, CMODE_ULTIMAX, CMODE_READ |
             CMODE_PHI2_RAM);
     }
 
@@ -1509,7 +1514,7 @@ void ramlink_config_setup(uint8_t *rawcart)
     }
 
     /* setup the cart */
-    cart_config_changed_slotmain(0, 3, CMODE_READ | CMODE_PHI2_RAM);
+    cart_config_changed_slotmain(CMODE_RAM, CMODE_ULTIMAX, CMODE_READ | CMODE_PHI2_RAM);
 }
 
 /* ---------------------------------------------------------------------*/

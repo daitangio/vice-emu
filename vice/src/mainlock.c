@@ -50,10 +50,10 @@
 
 static volatile bool vice_thread_keepalive = true;
 
-static int ui_thread_waiting = 0;
-static int ui_thread_lock_count = 0;
+static int ui_thread_waiting;
+static int ui_thread_lock_count;
 
-static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t lock;
 
 /* Used to hand control to the UI */
 static pthread_cond_t yield_condition = PTHREAD_COND_INITIALIZER;
@@ -69,15 +69,16 @@ static unsigned long start_time;
 
 void mainlock_init(void)
 {
-    pthread_mutex_lock(&lock);
+    pthread_mutexattr_t lock_attributes;
+    pthread_mutexattr_init(&lock_attributes);
+    pthread_mutexattr_settype(&lock_attributes, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&lock, &lock_attributes);
 
     vice_thread = pthread_self();
     vice_thread_is_running = true;
 
     tick_per_ms = tick_per_second() / 1000;
     start_time = tick_now();
-
-    pthread_mutex_unlock(&lock);
 }
 
 
@@ -159,7 +160,7 @@ void mainlock_yield_once(void)
     pthread_mutex_unlock(&lock);
 
 #ifdef VICE_MAINLOCK_DEBUG
-    yield_tick_delta_ms = tick_delta(yield_tick) / tick_per_ms;
+    yield_tick_delta_ms = tick_now_delta(yield_tick) / tick_per_ms;
     if (yield_tick_delta_ms > 0) {
         printf("Yielded for %lu ms\n", yield_tick_delta_ms);
     }
@@ -308,6 +309,36 @@ void mainlock_release(void)
         return;
     }
 
+    ui_thread_lock_count--;
+
+    if (ui_thread_lock_count) {
+        /* printf("lock count now %d, (still locked)\n", ui_thread_lock_count); */
+        pthread_mutex_unlock(&lock);
+        return;
+    }
+
+    pthread_cond_signal(&return_condition);
+
+    pthread_mutex_unlock(&lock);
+}
+
+
+void mainlock_release_if_locked(void)
+{
+    pthread_mutex_lock(&lock);
+
+    if (pthread_equal(pthread_self(), vice_thread)) {
+        /* See detailed comment in mainlock_obtain() */
+        printf("FIXME! VICE thread is trying to release the mainlock!\n"); fflush(stdout);
+        return;
+    }
+
+    if (ui_thread_lock_count == 0) {
+        /* Not locked */
+        pthread_mutex_unlock(&lock);
+        return;
+    }
+    
     ui_thread_lock_count--;
 
     if (ui_thread_lock_count) {

@@ -648,10 +648,6 @@ static void mmcreplay_update_mapper_nolog(unsigned int wflag, int release_freeze
             io1bank_ram = io1bank;
             io2bank_ram = io2bank;
 
-            /* FIXME */
-            mapped_game = 1;
-            mapped_exrom = 1;
-
             enable_raml = 0;
             enable_ramh = 0;
 
@@ -774,7 +770,6 @@ static void mmcreplay_update_mapper_nolog(unsigned int wflag, int release_freeze
                 /* 16k game mode,  ultimax */
                 /* ultimax, ram at $e000, rom at $8000, rom at $a000 */
                 mapped_game = 1;
-                mapped_exrom = 1;
                 ultimax_mapping_hack = 1;
 
                 if (enable_ram_io1) {
@@ -895,11 +890,9 @@ static void mmcreplay_update_mapper_nolog(unsigned int wflag, int release_freeze
                             cartbankl =
                                 ((bank_address_16_18 << 3) | bank_address_13_15)
                                 & (0x3f);
-                            cartbankh = cartbankl;
                             rambankl =
                                 ((bank_address_16_18 << 3) | bank_address_13_15)
                                 & (0x3f);
-                            rambankh = rambankl;
                             io1bank =
                                 ((bank_address_16_18 << 3) | bank_address_13_15)
                                 & (0x3f);
@@ -2379,7 +2372,7 @@ void mmcreplay_freeze(void)
 
     /* we don't have a proper hook to release this bit after a while,
      * so we can only set it to 0 and hope for the best */
-    /* freeze_pressed = 1; *//* (r) freeze button pressed.  */
+    /* freeze_pressed = 1; */ /* (r) freeze button pressed.  */
     freeze_pressed = 0;
     /* ^ bit 3: bank address 13 (W) */
     /* ^ bit 4: bank address 14 (W) */

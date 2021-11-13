@@ -523,8 +523,8 @@ void isepic_romh_store(uint16_t addr, uint8_t byte)
             case 0xfffb:
                 isepic_ram[(isepic_page * 256) + (addr & 0xff)] = byte;
                 break;
-		}
-	}
+        }
+    }
     mem_store_without_ultimax(addr, byte);
 }
 
@@ -627,7 +627,7 @@ void isepic_config_init(void)
 void isepic_reset(void)
 {
     if (isepic_state == ISEPIC_STATE_NMI_EXECUTING) {
-        cart_config_changed_slot1(2, 2, CMODE_READ | CMODE_RELEASE_FREEZE);
+        cart_config_changed_slot1(CMODE_RAM, CMODE_RAM, CMODE_READ | CMODE_RELEASE_FREEZE);
         isepic_state = ISEPIC_STATE_PROGRAMMING;
     }
 }

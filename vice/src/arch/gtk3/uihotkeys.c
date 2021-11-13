@@ -1,8 +1,9 @@
 /** \file   uihotkeys.c
  * \brief   GTK3 hotkeys dialog
  *
- * Display a list of hotkeys (keyboard shorcuts). At some point those should be
- * (partially) editable.
+ * Display a list of hotkeys (keyboard shorcuts).
+ *
+ * At some point those should be (partially) editable.
  *
  * \author  Bas Wassink <b.wassink@ziggo.nl>
  */
@@ -157,8 +158,6 @@ static const hotkey_info_t hotkeys_list[] = {
     { VICE_MOD_MASK, "O", "Open settings dialog" },
     { VICE_MOD_MASK, "Delete", "Copy BASIC screen text to clipboard" },
     { VICE_MOD_MASK, "Insert", "Paste clipboard to BASIC" },
-    { VICE_MOD_MASK|GDK_SHIFT_MASK, "F12",
-        "Switch VICII border mode in x64sc" },
 
     ARNIE
 };
@@ -300,11 +299,9 @@ gboolean uihotkeys_dialog_show(GtkWidget *widget, gpointer data)
     hk_model = create_model();
     hk_view = create_view(hk_model);
 
-    content = gtk_grid_new();
     scrolled = gtk_scrolled_window_new(NULL, NULL);
     gtk_widget_set_size_request(scrolled, 800, 600);
     gtk_container_add(GTK_CONTAINER(scrolled), hk_view);
-
 
     dialog = gtk_dialog_new_with_buttons(
             "Hotkeys list",

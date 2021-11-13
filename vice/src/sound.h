@@ -66,8 +66,8 @@
 #define SOUND_SAMPLE_RATE 22050
 #define SOUND_SAMPLE_BUFFER_SIZE 100
 #else
-#define SOUND_SAMPLE_RATE 44100
-#define SOUND_SAMPLE_BUFFER_SIZE 26
+#define SOUND_SAMPLE_RATE 48000
+#define SOUND_SAMPLE_BUFFER_SIZE 30
 #endif
 
 #define SOUND_CHANNELS_MAX 2
@@ -82,9 +82,8 @@
 #define SOUND_RECORD_DEVICE     0
 #define SOUND_PLAYBACK_DEVICE   1
 
-/* I need this to serialize close_sound and enablesound/sound_open in
-   the OS/2 Multithreaded environment                              */
 extern int sound_state_changed;
+extern int sound_playdev_reopen;
 extern int sid_state_changed;
 
 /* device structure */
@@ -214,7 +213,6 @@ extern int sound_dump(int chipno);
 /* functions and structs implemented by each machine */
 typedef struct sound_s sound_t;
 extern char *sound_machine_dump_state(sound_t *psid);
-extern void sound_machine_prevent_clk_overflow(sound_t *psid, CLOCK sub);
 extern void sound_machine_enable(int enable);
 
 extern unsigned int sound_device_num(void);
@@ -234,7 +232,7 @@ typedef struct sound_chip_s {
     void (*close)(sound_t *psid);
 
     /* sound chip calculate samples function */
-    int (*calculate_samples)(sound_t **psid, int16_t *pbuf, int nr, int sound_output_channels, int sound_chip_channels, int *delta_t);
+    int (*calculate_samples)(sound_t **psid, int16_t *pbuf, int nr, int sound_output_channels, int sound_chip_channels, CLOCK *delta_t);
 
     /* sound chip store function */
     void (*store)(sound_t *psid, uint16_t addr, uint8_t val);

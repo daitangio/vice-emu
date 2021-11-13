@@ -61,6 +61,7 @@
 #include "kbd.h"
 #include "lib.h"
 #include "log.h"
+#include "hotkeys.h"
 #include "machine.h"
 #include "mainlock.h"
 #include "monitor.h"
@@ -73,12 +74,15 @@
 #include "vsyncapi.h"
 
 #include "basedialogs.h"
+#include "uiactions.h"
 #include "uiapi.h"
 #include "uicommands.h"
+#include "uimachinemenu.h"
 #include "uimenu.h"
 #include "uisettings.h"
 #include "uistatusbar.h"
 #include "jamdialog.h"
+#include "extendimagedialog.h"
 #include "uicart.h"
 #include "uidiskattach.h"
 #include "uismartattach.h"
@@ -95,7 +99,6 @@
 
 #include "ui.h"
 
-
 /* Forward declarations of static functions */
 
 static int set_save_resources_on_exit(int val, void *param);
@@ -107,10 +110,14 @@ static int set_window_ypos(int val, void *param);
 static int set_start_minimized(int val, void *param);
 static int set_native_monitor(int val, void *param);
 static int set_monitor_font(const char *, void *param);
+static int set_monitor_bg(const char *, void *param);
+static int set_monitor_fg(const char *, void *param);
 static int set_fullscreen_state(int val, void *param);
-static void ui_toggle_warp(void);
+static int set_fullscreen_decorations(int val, void *param);
 static int set_pause_on_settings(int val, void *param);
-static void ui_switch_border_mode(void);
+static int set_autostart_on_doubleclick(int val, void *param);
+static int set_settings_node_path(const char *val, void *param);
+
 
 /*****************************************************************************
  *                  Defines, enums, type declarations                        *
@@ -145,20 +152,20 @@ typedef struct ui_resources_s {
 
     char *monitor_font;         /**< Pango font description string of the
                                      VTE monitor font */
-#ifdef COMPYX_LAMER
+    char *monitor_bg;           /**< Monitor background color */
+    char *monitor_fg;           /**< Monitor foreground color */
     int autostart_on_doubleclick;   /**< Use autostart on double-clicking in
                                          file attach dialogs (bool) */
-#endif
 #if 0
     int depth;
 #endif
 
-    video_canvas_t *canvas[NUM_WINDOWS];
-    GtkWidget *window_widget[NUM_WINDOWS]; /**< the toplevel GtkWidget (Window) */
-    int window_width[NUM_WINDOWS];
-    int window_height[NUM_WINDOWS];
-    int window_xpos[NUM_WINDOWS];
-    int window_ypos[NUM_WINDOWS];
+    video_canvas_t *canvas[NUM_WINDOWS];    /**< video canvases */
+    GtkWidget *window_widget[NUM_WINDOWS];  /**< the toplevel GtkWidget (Window) */
+    int window_width[NUM_WINDOWS];          /**< window widths */
+    int window_height[NUM_WINDOWS];         /**< window heights */
+    int window_xpos[NUM_WINDOWS];           /**< window x positions */
+    int window_ypos[NUM_WINDOWS];           /**< window y positions */
 
 } ui_resource_t;
 
@@ -175,6 +182,20 @@ static ui_resource_t ui_resources;
 static int fullscreen_enabled = 0;
 
 
+/** \brief  Flag inidicating whether fullscreen mode shows the decorations
+ *
+ * Used bt the resource "FullscreenDecorations".
+ */
+static int fullscreen_has_decorations = 0;
+
+
+/** \brief  Settings node to activate after booting the emulator
+ *
+ * Used by the `-settings-node` command line option
+ */
+static const char *settings_node_path = NULL;
+
+
 /** \brief  Row numbers of the various widgets packed in a main GtkWindow
  */
 enum {
@@ -184,43 +205,6 @@ enum {
     ROW_CRT_CONTROLS,   /**< CRT control widgets */
     ROW_MIXER_CONTROLS  /**< mixer control widgets */
 };
-
-
-/** \brief  Default hotkeys for the UI not connected to a menu item
- */
-static kbd_gtk3_hotkey_t default_hotkeys[] = {
-    /* Alt+P: toggle pause */
-    { GDK_KEY_p, VICE_MOD_MASK, (void *)ui_toggle_pause },
-    /* Alt+W: toggle warp mode */
-    { GDK_KEY_w, VICE_MOD_MASK, ui_toggle_warp },
-    /* Alt+Shift+P: Advance frame (only when paused)
-     *
-     * XXX: seems GDK_KEY_*P* is required here, otherwise the key press isn't
-     *      recognized (only tested on Win10)
-     */
-    { GDK_KEY_P, VICE_MOD_MASK|GDK_SHIFT_MASK, (void *)ui_advance_frame },
-
-    /* Removed, Pause has taken over this function, see commit 37965 */
-    { GDK_KEY_F12, VICE_MOD_MASK|GDK_SHIFT_MASK, ui_switch_border_mode },
-    /* Alt+J = swap joysticks */
-    { GDK_KEY_j, VICE_MOD_MASK,
-        (void *)ui_swap_joysticks_callback },
-    /* Alt+Shift+U = swap userport joysticks */
-    { GDK_KEY_U, VICE_MOD_MASK|GDK_SHIFT_MASK,
-        (void *)ui_swap_userport_joysticks_callback },
-    { GDK_KEY_J, VICE_MOD_MASK|GDK_SHIFT_MASK,
-        (void *)ui_toggle_keyset_joysticks },
-    { GDK_KEY_m, VICE_MOD_MASK,
-        (void *)ui_toggle_mouse_grab },
-    
-    /* Windows folks expect Alt+Enter to go full screen */
-    { GDK_KEY_Return, VICE_MOD_MASK,
-        (void *)ui_fullscreen_callback },
-
-    /* Arnie */
-    { 0, 0, NULL }
-};
-
 
 
 
@@ -234,6 +218,10 @@ static const resource_string_t resources_string[] = {
     /* VTE-monitor font */
     { "MonitorFont", "monospace 11", RES_EVENT_NO, NULL,
         &ui_resources.monitor_font, set_monitor_font, NULL },
+    { "MonitorFG", "#ffffff", RES_EVENT_NO, NULL,
+        &ui_resources.monitor_fg, set_monitor_fg, NULL },
+    { "MonitorBG", "#000000", RES_EVENT_NO, NULL,
+        &ui_resources.monitor_bg, set_monitor_bg, NULL },
 
     RESOURCE_STRING_LIST_END
 };
@@ -256,15 +244,15 @@ static const resource_int_t resources_int_shared[] = {
     { "FullscreenEnable", 0, RES_EVENT_NO, NULL,
         &fullscreen_enabled, set_fullscreen_state, NULL },
 
+    { "FullscreenDecorations", 0, RES_EVENT_NO, NULL,
+        &fullscreen_has_decorations, set_fullscreen_decorations, NULL },
+
     { "PauseOnSettings", 0, RES_EVENT_NO, NULL,
         &ui_resources.pause_on_settings, set_pause_on_settings, NULL },
-#ifdef COMPYX_LAMER
     /* Use autostart on doubleclick in dialogs */
     { "AutostartOnDoubleclick", 0, RES_EVENT_NO, NULL,
         &ui_resources.autostart_on_doubleclick, set_autostart_on_doubleclick,
         NULL },
-#endif
-
     RESOURCE_INT_LIST_END
 };
 
@@ -353,19 +341,30 @@ static const cmdline_option_t cmdline_options_common[] =
     { "+fullscreen", SET_RESOURCE, CMDLINE_ATTRIB_NONE,
         NULL, NULL, "FullscreenEnable", (void*)0,
         NULL, "Disable fullscreen" },
+    { "-fullscreen-decorations", SET_RESOURCE, CMDLINE_ATTRIB_NONE,
+        NULL, NULL, "FullscreenDecorations", (void*)1,
+        NULL, "Enable fullscreen decorations" },
+    { "+fullscreen-decorations", SET_RESOURCE, CMDLINE_ATTRIB_NONE,
+        NULL, NULL, "FullscreenDecorations", (void*)0,
+        NULL, "Disable fullscreen decorations" },
     { "-monitorfont", SET_RESOURCE, CMDLINE_ATTRIB_NEED_ARGS,
         set_monitor_font, NULL, "MonitorFont", NULL,
         "font-description", "Set monitor font for the Gtk3 monitor" },
+    { "-monitorbg", SET_RESOURCE, CMDLINE_ATTRIB_NEED_ARGS,
+        set_monitor_bg,  NULL, "MonitorBG", NULL,
+        "font-background", "Set monitor font background color" },
+    { "-monitorfg", SET_RESOURCE, CMDLINE_ATTRIB_NEED_ARGS,
+        set_monitor_fg,  NULL, "MonitorFG", NULL,
+        "font-foreground", "Set monitor font foreround color" },
     { "-autostart-on-doubleclick", SET_RESOURCE, CMDLINE_ATTRIB_NONE,
         NULL, NULL, "AutostartOnDoubleclick", (void*)1,
         NULL, "Autostart files on doubleclick" },
-#ifdef COMPYX_LAMER
     { "+autostart-on-doubleclick", SET_RESOURCE, CMDLINE_ATTRIB_NONE,
         NULL, NULL, "AutostartOnDoubleclick", (void*)0,
         NULL, "Open files on doubleclick" },
-#endif
-
-
+    { "-settings-node", CALL_FUNCTION, CMDLINE_ATTRIB_NEED_ARGS,
+        set_settings_node_path, NULL, NULL, NULL,
+        "settings-node", "Open settings dialog at <settings-node>" },
     CMDLINE_LIST_END
 };
 
@@ -386,9 +385,6 @@ static int active_win_index = -1;
  */
 static int is_fullscreen = 0;
 
-/** \brief  Flag inidicating whether fullscreen mode shows the decorations
- */
-static int fullscreen_has_decorations = 0;
 
 /** \brief  Function to handle files dropped on a main window
  */
@@ -464,9 +460,6 @@ static void ui_on_drag_data_received(
     gchar *filename = NULL;
     gchar **files = NULL;
     guchar *text = NULL;
-#ifdef HAVE_DEBUG_GTK3UI
-    int i;
-#endif
 
     switch (info) {
 
@@ -524,13 +517,15 @@ static void ui_on_drag_data_received(
             files = g_strsplit((const gchar *)text, "\n", -1);
             g_free(text);
 
-#ifdef HAVE_DEBUG_GTK3UI
+#if 0
+# ifdef HAVE_DEBUG_GTK3UI
             for (i = 0; files[i] != NULL; i++) {
                 /* keep this as well */
                 gchar *tmp = g_filename_from_uri(files[i], NULL, NULL);
                 debug_gtk3("URI: '%s', filename: '%s'.",
                         files[i], tmp);
             }
+# endif
 #endif
             /* now grab the first file */
             filename = g_filename_from_uri(files[0], NULL, NULL);
@@ -555,7 +550,7 @@ static void ui_on_drag_data_received(
 /** \brief  Set fullscreen state \a val
  *
  * \param[in]   val     fullscreen state (boolean)
- * \param[in]   param   extra argument (unused(
+ * \param[in]   param   extra argument (unused)
  *
  * \return 0
  */
@@ -565,6 +560,19 @@ static int set_fullscreen_state(int val, void *param)
     return 0;
 }
 
+
+/** \brief  Resource setter for "FullscreenDecorations"
+ *
+ * \param[in]   val     new value
+ * \param[in]   param   extra argument (unused)
+ *
+ * \return 0
+ */
+static int set_fullscreen_decorations(int val, void *param)
+{
+    fullscreen_has_decorations = val;
+    return 0;
+}
 
 
 /** \brief  Get the most recently focused toplevel window
@@ -726,7 +734,6 @@ static GdkPixbuf *get_default_icon(void)
         buffer[sizeof(buffer) - 1] = '\0';
     } else {
         g_snprintf(buffer, sizeof(buffer), "%s.svg", machine_name);
-        debug_gtk3("Trying icon '%s'", buffer);
     }
 
 #ifdef MACOSX_SUPPORT
@@ -864,14 +871,15 @@ void ui_trigger_resize(void)
     }
 }
 
+
 /** \brief  Toggles fullscreen mode in reaction to user request
  *
- * \param[in]   widget      the widget that sent the callback (ignored)
- * \param[in]   user_data   extra data for the callback (ignored)
+ * If fullscreen is enabled and there are no window decorations requested for
+ * fullscreen mode, the mouse pointer is hidden until fullscreen is disabled.
  *
  * \return  TRUE
  */
-gboolean ui_fullscreen_callback(GtkWidget *widget, gpointer user_data)
+gboolean ui_action_toggle_fullscreen(void)
 {
     GtkWindow *window;
 
@@ -888,20 +896,22 @@ gboolean ui_fullscreen_callback(GtkWidget *widget, gpointer user_data)
         gtk_window_unfullscreen(window);
     }
 
+    ui_set_gtk_check_menu_item_blocked_by_name(ACTION_FULLSCREEN_TOGGLE,
+                                               is_fullscreen);
     ui_update_fullscreen_decorations();
     return TRUE;
 }
 
+
 /** \brief Toggles fullscreen window decorations in response to user request
- *
- * \param[in]   widget      the widget that sent the callback (ignored)
- * \param[in]   user_data   extra data for the callback (ignored)
  *
  * \return  TRUE
  */
-gboolean ui_fullscreen_decorations_callback(GtkWidget *widget, gpointer user_data)
+gboolean ui_action_toggle_fullscreen_decorations(void)
 {
     fullscreen_has_decorations = !fullscreen_has_decorations;
+    ui_set_gtk_check_menu_item_blocked_by_name(ACTION_FULLSCREEN_DECORATIONS_TOGGLE,
+                                               fullscreen_has_decorations);
     ui_update_fullscreen_decorations();
     return TRUE;
 }
@@ -968,7 +978,18 @@ static int set_pause_on_settings(int val, void *param)
     return 0;
 }
 
-
+/** \brief  Set AutostartOnDoubleClick resource (bool)
+ *
+ * \param[in]   val     new value
+ * \param[in]   param   extra param (ignored)
+ *
+ * \return 0
+ */
+static int set_autostart_on_doubleclick(int val, void *param)
+{
+    ui_resources.autostart_on_doubleclick = val ? 1 : 0;
+    return 0;
+}
 
 /** \brief  Set StartMinimized resource (bool)
  *
@@ -1017,6 +1038,37 @@ static int set_monitor_font(const char *val, void *param)
     util_string_set(&ui_resources.monitor_font, val);
     return 0;
 }
+
+
+
+/** \brief  Resource handler: set monitor background color for VTE-based monitor
+ *
+ * \param[in]   val     color
+ * \param[in]   param   extra argument (unused)
+ *
+ * \return  0 (success)
+ */
+static int set_monitor_bg(const char *val, void *param)
+{
+    util_string_set(&ui_resources.monitor_bg, val);
+    return 0;
+}
+
+
+/** \brief  Resource handler: set monitor foreground color for VTE-based monitor
+ *
+ * \param[in]   val     color
+ * \param[in]   param   extra argument (unused)
+ *
+ * \return  0 (success)
+ */
+static int set_monitor_fg(const char *val, void *param)
+{
+    util_string_set(&ui_resources.monitor_fg, val);
+    return 0;
+}
+
+
 
 
 
@@ -1093,6 +1145,7 @@ static int set_window_ypos(int val, void *param)
 }
 
 
+/* FIXME: Why is this here? */
 #ifdef COMPYX_LAMER
 /** \brief  Set the 'AutostartOnDoubleclick' resource
  *
@@ -1107,6 +1160,27 @@ static int set_autostart_on_doubleclick(int val, void *param)
     return 0;
 }
 #endif
+
+
+/** \brief  Set settings node path to activate on UI startup
+ *
+ * Triggers opening the settings dialog at node \a val once when starting VICE.
+ *
+ * Useful for working on settings dialogs, avoid having to click through the UI.
+ * For example: `x64sc -settings-node peripheral/drive` will open the drive
+ * settings.
+ *
+ * \param[in]   val     setting node path
+ * \param[in]   param   extra data (unused);
+ *
+ * \return  0
+ */
+static int set_settings_node_path(const char *val, void *param)
+{
+    debug_gtk3("Activating settings node '%s'.", val);
+    settings_node_path = val;
+    return 0;   /* we won't know if the path is valid until later */
+}
 
 
 /*
@@ -1174,7 +1248,6 @@ void ui_set_create_controls_widget_func(GtkWidget *(*func)(int))
  */
 static void on_window_grid_destroy(GtkWidget *widget, gpointer data)
 {
-    debug_gtk3("destroy triggered on %p.", (void *)widget);
 }
 
 
@@ -1328,7 +1401,7 @@ static gboolean rendering_area_event_handler(GtkWidget *canvas,
          * a lightpen isn't active */
         resources_get_int("Mouse", &mouse);
         if (!mouse && !lightpen_enabled) {
-            ui_fullscreen_callback(canvas, event);
+            ui_action_toggle_fullscreen();
         }
         /* signal event handled */
         return TRUE;
@@ -1368,7 +1441,6 @@ void ui_create_main_window(video_canvas_t *canvas)
     GtkWidget *crt_controls;
     GtkWidget *mixer_controls;
 
-    GtkWidget *kbd_widget;
     int kbd_status = 0;
     int mouse_grab = 0;
 
@@ -1408,8 +1480,12 @@ void ui_create_main_window(video_canvas_t *canvas)
     if (!mouse_grab) {
         g_snprintf(title, 256, "VICE (%s)", machine_get_name());
     } else {
-        g_snprintf(title, 256, "VICE (%s) (Use %s+M to disable mouse grab)",
-                machine_get_name(), VICE_MOD_MASK_TEXT);
+        ui_menu_item_t *item = ui_get_vice_menu_item_by_name("mouse-grab-toggle");
+        gchar *name = gtk_accelerator_name(item->keysym, item->modifier);
+
+        g_snprintf(title, 256, "VICE (%s) (Use %s to disable mouse grab)",
+                machine_get_name(), name);
+        g_free(name);
     }
 
     gtk_window_set_title(GTK_WINDOW(new_window), title);
@@ -1511,26 +1587,13 @@ void ui_create_main_window(video_canvas_t *canvas)
 
     /* gtk_window_set_title(GTK_WINDOW(new_window), canvas->viewport->title); */
 
-    /* Connect keyboard handlers, except for VSID
-     *
-     * TODO:    support hotkeys (if required) for VSID
-     */
+    /* Connect keyboard handlers, except for VSID */
     if (machine_class != VICE_MACHINE_VSID) {
         kbd_connect_handlers(new_window, NULL);
-
-        /* Add default hotkeys that don't have a menu item */
-        if (!kbd_hotkey_add_list(default_hotkeys)) {
-            debug_gtk3("adding hotkeys failed, see the log for details.");
-        }
     }
 
     /*
      * Try to restore windows position and size
-     */
-
-
-    /*
-     * Do we need to restore window(s) position/size?
      */
     if (resources_get_int("RestoreWindowGeometry", &restore) < 0) {
         restore = 0;
@@ -1543,11 +1606,14 @@ void ui_create_main_window(video_canvas_t *canvas)
         resources_get_int_sprintf("Window%dYpos", &ypos, target_window);
         resources_get_int_sprintf("Window%dwidth", &width, target_window);
         resources_get_int_sprintf("Window%dheight", &height, target_window);
-
+#if 0
         debug_gtk3("X: %d, Y: %d, W: %d, H: %d", xpos, ypos, width, height);
+#endif
         if (xpos < 0 || ypos < 0 || width <= 0 || height <= 0) {
             /* def. not legal */
+#if 0
             debug_gtk3("shit ain't legal!");
+#endif
         } else {
             gtk_window_move(GTK_WINDOW(new_window), xpos, ypos);
             gtk_window_resize(GTK_WINDOW(new_window), width, height);
@@ -1587,16 +1653,7 @@ void ui_create_main_window(video_canvas_t *canvas)
         if (resources_get_int("KbdStatusbar", &kbd_status) < 0) {
             kbd_status = 0;
         }
-    } else {
-        kbd_status = 0;
-    }
-
-    kbd_widget = gtk_grid_get_child_at(GTK_GRID(status_bar), 0, 3);
-
-    if (kbd_status) {
-        gtk_widget_show_all(kbd_widget);
-    } else {
-        gtk_widget_hide(kbd_widget);
+        ui_statusbar_set_kbd_debug(kbd_status);
     }
 
     if (grid != NULL) {
@@ -1609,6 +1666,14 @@ void ui_create_main_window(video_canvas_t *canvas)
                 "button-press-event",
                 G_CALLBACK(rendering_area_event_handler),
                 new_window);
+    }
+
+    /* activate settings dialog at a specific node if requested via the
+     * -settings-node command line option
+     */
+    if (settings_node_path != NULL) {
+        ui_settings_dialog_create_and_activate_node(settings_node_path);
+        settings_node_path = NULL;
     }
 }
 
@@ -1691,10 +1756,9 @@ void ui_destroy_main_window(int index)
  */
 int ui_cmdline_options_init(void)
 {
-    /* seems complete to me -- compyx */
-#if 0
-    INCOMPLETE_IMPLEMENTATION();
-#endif
+    if (ui_hotkeys_cmdline_options_init() != 0) {
+        return -1;
+    }
     return cmdline_register_options(cmdline_options_common);
 }
 
@@ -1728,19 +1792,24 @@ char *ui_get_file(const char *format, ...)
  *
  * \return  0 on success, -1 on failure
  */
-int ui_init(int *argc, char **argv)
+void ui_init_with_args(int *argc, char **argv)
 {
+    gtk_init(argc, &argv);
+}
 
+
+/** \brief  Initialize UI
+ *
+ * Loads gresource data, disables F10 as the accelerator for the menu bar,
+ * registers the CBM font with the host and initializes the statusbar.
+ *
+ * \return  0
+ */
+int ui_init(void)
+{
     GSettings *settings;
     GVariant *variant;
     GtkSettings *settings_default;
-
-#if 0
-    INCOMPLETE_IMPLEMENTATION();
-#endif
-    gtk_init(argc, &argv);
-
-    kbd_hotkey_init();
 
     /*
      * Make sure F10 doesn't trigger the menu bar
@@ -1820,7 +1889,7 @@ static ui_jam_action_t jam_dialog_result;
  *
  * \return  FALSE
  */
-gboolean ui_jam_dialog_impl(gpointer user_data)
+static gboolean ui_jam_dialog_impl(gpointer user_data)
 {
     /* XXX: this probably needs a variable index into the window_widget array */
     jam_dialog_result = jam_dialog(ui_resources.window_widget[PRIMARY_WINDOW], (char *)user_data);
@@ -1889,6 +1958,9 @@ int ui_resources_init(void)
         }
     }
 
+    /* initialize custom hotkeys resources */
+    ui_hotkeys_resources_init();
+
     for (i = 0; i < NUM_WINDOWS; ++i) {
         ui_resources.canvas[i] = NULL;
         ui_resources.window_widget[i] = NULL;
@@ -1903,7 +1975,10 @@ int ui_resources_init(void)
 void ui_resources_shutdown(void)
 {
     lib_free(ui_resources.monitor_font);
+    lib_free(ui_resources.monitor_fg);
+    lib_free(ui_resources.monitor_bg);
 }
+
 
 /** \brief Clean up memory used by the UI system itself
  */
@@ -1911,23 +1986,76 @@ void ui_shutdown(void)
 {
     uidata_shutdown();
     ui_statusbar_shutdown();
+    ui_hotkeys_shutdown();
 }
 
-/** \brief  Display the "Do you want to extend the disk image to
- *          40-track format?" dialog
+
+/** \brief  Result of the extend image dialog
+ */
+static ui_extendimage_action_t extendimage_dialog_result;
+
+
+/** \brief  extend image dialog handler for the threaded UI
+ *
+ * \param[in]   user_data   message
+ *
+ * \return  FALSE
+ */
+static gboolean ui_extendimage_dialog_impl(gpointer user_data)
+{
+    /* XXX: this probably needs a variable index into the window_widget array
+     *
+     *      Nope, our code is so shitty it uses ui_get_active_window(), so we
+     *      pass NULL.
+     */
+    extendimage_dialog_result = extendimage_dialog(NULL, (char *)user_data);
+
+    return FALSE;
+}
+
+
+/** \brief  Display the "Do you want to extend the disk image?" dialog
  *
  * \return  nonzero to extend the image, 0 otherwise
  *
- * \warning This function is not implemented and it will intentionally
- *          crash VICE if called.
  */
 int ui_extend_image_dialog(void)
 {
-    /* FIXME: this dialog needs to be implemented. */
-    NOT_IMPLEMENTED();
-    return 0;
-}
+    const char * const msg =
+        "  The drive has written to tracks that are not included in the currently  \n"
+        "  mounted image. Do you want to write those extra tracks into the current  \n"
+        "  image?";
 
+    if (console_mode) {
+        /* XXX: Can't really ask, so make a decision. */
+        return UI_EXTEND_IMAGE_ALWAYS;
+    }
+
+    if (mainlock_is_vice_thread()) {
+        /*
+         * We need to use the main thread to do UI stuff. And we
+         * also need to block the VICE thread until we get the
+         * user decision.
+         */
+        extendimage_dialog_result = UI_EXTEND_IMAGE_INVALID;
+        /* FIXME: ideally we would somehow get the drive and perhaps name of the
+                  mounted image and put it into the message. */
+        gdk_threads_add_timeout(0, ui_extendimage_dialog_impl, (void *)msg);
+
+        /* block until the result is set */
+        while (extendimage_dialog_result == UI_EXTEND_IMAGE_INVALID) {
+            tick_sleep(tick_per_second() / 60);
+        }
+    } else {
+        /*
+         * Shutdown code is executed by the UI thread, not the vice thread.
+         * And this code can be called during shutdown.
+         */
+        extendimage_dialog_result = extendimage_dialog(NULL, msg);
+    }
+
+    return extendimage_dialog_result;
+}
 
 /** \brief  Not used */
 void ui_dispatch_events(void)
@@ -2059,34 +2187,37 @@ void ui_pause_toggle(void)
 }
 
 
-/** \brief  Pause toggle handler
+/** \brief  Pause toggle action
  *
  * \return  TRUE (indicates the Alt+P got consumed by Gtk, so it won't be
  *          passed to the emu)
- *
- * \todo    Update UI tickmarks properly if triggered by a keyboard
- *          accelerator, or the settings dialog.
  */
-gboolean ui_toggle_pause(void)
+gboolean ui_action_toggle_pause(void)
 {
     ui_pause_toggle();
-    /* TODO: somehow update the checkmark in the menu without reverting to
-     *       weird code like Gtk
-     */
+    ui_set_gtk_check_menu_item_blocked_by_name("toggle-pause",
+                                               (gboolean)ui_pause_active());
+
     return TRUE;    /* has to be TRUE to avoid passing Alt+P into the emu */
 }
 
 
-/** \brief  Toggle warp mode
+/** \brief  Toggle warp mode action
+ *
+ * \return  TRUE to signal GDK the key got consumed so it doesn't end up in
+ *          the emulated machine
  */
-static void ui_toggle_warp(void)
+gboolean ui_action_toggle_warp(void)
 {
-    ui_toggle_resource(NULL, (gpointer)"WarpMode");
+    vsync_set_warp_mode(!vsync_get_warp_mode());
+    ui_set_gtk_check_menu_item_blocked_by_name("toggle-warp-mode",
+                                               (gboolean)vsync_get_warp_mode());
+
+    return TRUE;
 }
 
 
-
-/** \brief  Advance frame handler
+/** \brief  Advance frame action
  *
  * \return  TRUE (indicates the Alt+SHIFT+P got consumed by Gtk, so it won't be
  *          passed to the emu)
@@ -2094,7 +2225,7 @@ static void ui_toggle_warp(void)
  * \note    The gboolean return value is no longer required since the 'hotkey'
  *          handling in kbd.c takes care of passing TRUE to Gtk3.
  */
-gboolean ui_advance_frame(void)
+gboolean ui_action_advance_frame(void)
 {
     if (ui_pause_active()) {
         vsyncarch_advance_frame();
@@ -2104,6 +2235,7 @@ gboolean ui_advance_frame(void)
 
     return TRUE;    /* has to be TRUE to avoid passing Alt+SHIFT+P into the emu */
 }
+
 
 /** \brief  Destroy UI resources (but NOT vice 'resources')
  *
@@ -2129,9 +2261,6 @@ void ui_exit(void)
 
     /* unregister the CBM font */
     archdep_unregister_cbmfont();
-
-    /* deallocate memory used by the unconnected keyboard shortcuts */
-    kbd_hotkey_shutdown();
 
     mainlock_release();
 }
@@ -2185,7 +2314,9 @@ void ui_enable_crt_controls(int enabled)
          * Appearently setting a size of 1x1 pixels forces Gtk3 to render the
          * window to the appropriate (minimum) size,
          */
+#if 0
         gtk_window_resize(GTK_WINDOW(window), 1, 1);
+#endif
     }
 }
 
@@ -2219,7 +2350,9 @@ void ui_enable_mixer_controls(int enabled)
          * Appearently setting a size of 1x1 pixels forces Gtk3 to render the
          * window to the appropriate (minimum) size,
          */
+#if 0
         gtk_window_resize(GTK_WINDOW(window), 1, 1);
+#endif
     }
 }
 
@@ -2239,15 +2372,4 @@ GtkWidget *ui_get_window_by_index(int index)
 }
 
 
-/** \brief  Switch x64sc border mode during real-time
- */
-void ui_switch_border_mode(void)
-{
-    int mode;
 
-    if (machine_class == VICE_MACHINE_C64SC) {
-        resources_get_int("VICIIBorderMode", &mode);
-        resources_set_int("VICIIBorderMode", (mode + 1) & 3);
-    }
-
-}

@@ -2,6 +2,7 @@
  * \brief   CPU speed, FPS display, Pause, Warp widget for the statusbar
  *
  * Widget for the status bar that displays CPU speed, FPS and warp/pause state.
+ *
  * When primary-button-clicking on the widget a menu will pop up allowing the
  * user to control refresh rate, emulation speed, warp and pause.
  *
@@ -33,15 +34,20 @@
 
 #include <gtk/gtk.h>
 #include <math.h>
+#include <string.h>
 
 #include "vice_gtk3.h"
 #include "basedialogs.h"
+#include "lib.h"
 #include "machine.h"
 #include "resources.h"
+#include "uiapi.h"
 #include "ui.h"
+#include "vsync.h"
 #include "vsyncapi.h"
 
 #include "statusbarspeedwidget.h"
+
 
 /** \brief  Predefined emulation speeds (taken from vice.texi)
  */
@@ -59,7 +65,7 @@ static int emu_fps_targets[] = { 60, 50, 0 };
  */
 static void on_advance_frame_activate(GtkWidget *widget, gpointer data)
 {
-    ui_advance_frame();
+    ui_action_advance_frame();
 }
 
 
@@ -83,13 +89,7 @@ static void add_separator(GtkWidget *menu)
  */
 static void on_warp_toggled(GtkWidget *widget, gpointer data)
 {
-    int warp;
-
-    if (resources_get_int("WarpMode", &warp) == 0) {
-        if (resources_set_int("WarpMode", !warp) < 0) {
-            debug_gtk3("failed to toggle warp mode.");
-        }
-    }
+    ui_action_toggle_warp();
 }
 
 
@@ -100,7 +100,7 @@ static void on_warp_toggled(GtkWidget *widget, gpointer data)
  */
 static void on_pause_toggled(GtkWidget *widget, gpointer data)
 {
-    ui_pause_toggle();
+    ui_action_toggle_pause();
 }
 
 
@@ -112,7 +112,7 @@ static void on_pause_toggled(GtkWidget *widget, gpointer data)
 static void on_emulation_speed_toggled(GtkWidget *widget, gpointer data)
 {
     int speed = GPOINTER_TO_INT(data);
-    
+
     resources_set_int("Speed", speed);
 }
 
@@ -120,7 +120,7 @@ static void on_emulation_speed_toggled(GtkWidget *widget, gpointer data)
 /** \brief  Callback for custom speed
  *
  * \param[in]   dialog  integer-dialog reference
- * \param[in[   result  result from the dialog
+ * \param[in]   result  result from the dialog
  * \param[in]   valid   \a result is valid
  */
 static void speed_custom_callback(GtkDialog *dialog, int result, gboolean valid)
@@ -157,7 +157,7 @@ static void on_speed_custom_toggled(GtkWidget *widget, gpointer data)
 /** \brief  Callback for custom FPS
  *
  * \param[in]   dialog  integer-dialog reference
- * \param[in[   result  result from the dialog
+ * \param[in]   result  result from the dialog
  * \param[in]   valid   \a result is valid
  */
 static void fps_custom_callback(GtkDialog *dialog, int result, gboolean valid)
@@ -286,7 +286,6 @@ GtkWidget *speed_menu_popup_create(void)
     GtkWidget *submenu;
     GtkWidget *item;
     GtkWidget *child;
-    int warp;
 
     menu = gtk_menu_new();
 
@@ -299,10 +298,13 @@ GtkWidget *speed_menu_popup_create(void)
     add_separator(menu);
 
     /* pause */
-    item = gtk_check_menu_item_new_with_label("Pause emulation (Alt+P)");
+    item = gtk_check_menu_item_new_with_label(NULL);
     child = gtk_bin_get_child(GTK_BIN(item));
-    gtk_label_set_markup(GTK_LABEL(child),
-            "Pause emulation (" VICE_MOD_MASK_HTML "+P)");
+    /* TODO:    Look up accelerator, if any, and add that.
+     *          Requires a function to get the accelerator from the custom
+     *          hotkeys.
+     */
+    gtk_label_set_markup(GTK_LABEL(child), "Pause emulation");
 
     if (ui_pause_active()) {
         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), TRUE);
@@ -311,10 +313,9 @@ GtkWidget *speed_menu_popup_create(void)
     g_signal_connect(item, "toggled", G_CALLBACK(on_pause_toggled), NULL);
 
     /* advance frame */
-    item = gtk_menu_item_new_with_label("Advance frame (Alt+Shift+P)");
+    item = gtk_menu_item_new_with_label(NULL);
     child = gtk_bin_get_child(GTK_BIN(item));
-    gtk_label_set_markup(GTK_LABEL(child),
-            "Advance frame (" VICE_MOD_MASK_HTML "+Shift+P)");
+    gtk_label_set_markup(GTK_LABEL(child), "Advance frame");
     if (!ui_pause_active()) {
         gtk_widget_set_sensitive(item, FALSE);
     }
@@ -323,14 +324,10 @@ GtkWidget *speed_menu_popup_create(void)
             NULL);
 
     /* enable warp mode */
-    item = gtk_check_menu_item_new_with_label("Enable warp mode (Alt+W)");
+    item = gtk_check_menu_item_new_with_label(NULL);
     child = gtk_bin_get_child(GTK_BIN(item));
-    gtk_label_set_markup(GTK_LABEL(child),
-            "Enable warp mode (" VICE_MOD_MASK_HTML "+W)");
-    if (resources_get_int("WarpMode", &warp) < 0) {
-        warp = 0;
-    }
-    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), (gboolean)warp);
+    gtk_label_set_markup(GTK_LABEL(child), "Warp mode");
+    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), (gboolean)vsync_get_warp_mode());
     gtk_container_add(GTK_CONTAINER(menu), item);
     g_signal_connect(item, "toggled", G_CALLBACK(on_warp_toggled), NULL);
 
@@ -351,12 +348,6 @@ static gboolean on_widget_clicked(GtkWidget *widget,
                                   GdkEvent *event,
                                   gpointer data)
 {
-    int mouse;
-
-    if (resources_get_int("Mouse", &mouse) < 0) {
-        mouse = 0;
-    }
-
     if (((GdkEventButton *)event)->button == GDK_BUTTON_PRIMARY) {
         GtkWidget *menu = speed_menu_popup_create();
         gtk_menu_popup_at_widget(GTK_MENU(menu), widget,
@@ -384,7 +375,9 @@ static GdkCursor *mouse_ptr;
  * \param[in]   event   event triggered
  * \param[in]   data    extra event data (unused)
  *
- * \TODO:   refactor, code can be simplified
+ * TODO: refactor, code can be simplified
+ *
+ * \return  TRUE if the event was handled
  */
 static gboolean on_widget_hover(GtkWidget *widget,
                                 GdkEvent *event,
@@ -424,6 +417,8 @@ static gboolean on_widget_hover(GtkWidget *widget,
 
 /** \brief  Create widget to display CPU/FPS/pause
  *
+ * \param[in,out]   state   current widget state
+ *
  * \return  GtkEventBox
  */
 GtkWidget *statusbar_speed_widget_create(statusbar_speed_widget_state_t *state)
@@ -431,6 +426,7 @@ GtkWidget *statusbar_speed_widget_create(statusbar_speed_widget_state_t *state)
     GtkWidget *grid;
     GtkWidget *label_cpu;
     GtkWidget *label_fps;
+    GtkWidget *label_status;
     PangoContext *context;
     const PangoFontDescription *desc_static;
     PangoFontDescription *desc;
@@ -452,7 +448,7 @@ GtkWidget *statusbar_speed_widget_create(statusbar_speed_widget_state_t *state)
      * will probably internally do the Pango stuff I do here on every call.
      */
 
-    /* label just for CPU (and Warp if active) */
+    /* label just for CPU  */
     label_cpu = gtk_label_new("");
     context = gtk_widget_get_pango_context(label_cpu);  /* don't free */
     desc_static = pango_context_get_font_description(context);
@@ -463,7 +459,7 @@ GtkWidget *statusbar_speed_widget_create(statusbar_speed_widget_state_t *state)
     gtk_widget_set_halign(label_cpu, GTK_ALIGN_START);
     gtk_grid_attach(GTK_GRID(grid), label_cpu, 0, 0, 1, 1);
 
-    /* label just for FPS (and Pause if active) */
+    /* label just for FPS  */
     label_fps = gtk_label_new("");
     context = gtk_widget_get_pango_context(label_fps);  /* don't free */
     desc_static = pango_context_get_font_description(context);
@@ -473,6 +469,11 @@ GtkWidget *statusbar_speed_widget_create(statusbar_speed_widget_state_t *state)
     pango_font_description_free(desc);
     gtk_widget_set_halign(label_fps, GTK_ALIGN_START);
     gtk_grid_attach(GTK_GRID(grid), label_fps, 0, 1, 1, 1);
+
+    /* label for pause/warp and perhaps CPU jam */
+    label_status = gtk_label_new("");
+    gtk_widget_set_halign(label_status, GTK_ALIGN_CENTER);
+    gtk_grid_attach(GTK_GRID(grid), label_status, 0, 2, 1, 1);
 
     /* create event box to capture mouse clicks to spawn popup menus */
     event_box = gtk_event_box_new();
@@ -492,11 +493,36 @@ GtkWidget *statusbar_speed_widget_create(statusbar_speed_widget_state_t *state)
 }
 
 
+/* Doxygen doesn't allow documenting #define's inside blocks, so we need to
+ * work around that.
+ */
+
+/** \def    CPU_DECIMAL_PLACES
+ *  \brief  CPU display decimals
+ */
+
+/** \def    FPS_DECIMAL_PLACES
+ *  \brief  FPS display decimals
+ */
+
+/** \def    STR_
+ *  \brief  Helper macro to allow concatenating string literals
+ */
+
+/** \def    STR
+ *  \brief  Helper macro to allow concatenating string literals
+ */
+
+
 /** \brief  Update the speed widget's display state
  *
- * \param[in]   widget  GtkEventBox containing the CPU/FPS widgets
+ * \param[in,out]   widget          GtkEventBox containing the CPU/FPS widgets
+ * \param[in,out]   state           current widget state
+ * \param[in]       window_identity window index (primary/secondary)
  */
-void statusbar_speed_widget_update(GtkWidget *widget, statusbar_speed_widget_state_t *state, int window_identity)
+void statusbar_speed_widget_update(GtkWidget *widget,
+                                  statusbar_speed_widget_state_t *state,
+                                  int window_identity)
 {
 #   define CPU_DECIMAL_PLACES 2
 #   define FPS_DECIMAL_PLACES 3
@@ -504,84 +530,123 @@ void statusbar_speed_widget_update(GtkWidget *widget, statusbar_speed_widget_sta
 #   define STR(x) STR_(x)
 
     static bool jammed = false;
-    
+
     GtkWidget *grid = NULL;
     GtkWidget *label;
     char buffer[1024];
-    
+
     double vsync_metric_cpu_percent;
     double vsync_metric_emulated_fps;
     int vsync_metric_warp_enabled;
+    tick_t now;
     
+    /*
+     * FIXME: Don't redraw too often, as it will trigger layout issues and slow joystick widget redraw
+     */
+    
+    now = tick_now();
+    if (now - state->last_render_tick < tick_per_second() / 5) {
+        return;
+    }
+    state->last_render_tick = now;
+
     /*
      * Jammed machines show the jam message instead of stats
      */
-    
+
     if (machine_is_jammed()) {
         if (!jammed) {
+#if 0
+            char *temp = lib_strdup(machine_jam_reason());
+            char *temp2 = strstr(temp, "JAM");
             jammed = true;
 
             grid = gtk_bin_get_child(GTK_BIN(widget));
-            
-            label = gtk_grid_get_child_at(GTK_GRID(grid), 0, 0);
-            gtk_label_set_text(GTK_LABEL(label), "");
 
             label = gtk_grid_get_child_at(GTK_GRID(grid), 0, 1);
-            gtk_label_set_text(GTK_LABEL(label), machine_jam_reason());
+            gtk_label_set_text(GTK_LABEL(label), temp2);
+            *temp2 = 0;
+            label = gtk_grid_get_child_at(GTK_GRID(grid), 0, 0);
+            gtk_label_set_text(GTK_LABEL(label), temp);
+
+            lib_free(temp);
+#endif
+            jammed = true;
+            ui_display_statustext(machine_jam_reason(), 0);
         }
         return;
     } else if (jammed) {
         jammed = false;
     }
-    
+
     vsyncarch_get_metrics(&vsync_metric_cpu_percent, &vsync_metric_emulated_fps, &vsync_metric_warp_enabled);
-    
+
     /*
      * Updating GTK labels is expensive and this is called each frame,
      * so we avoid updates that wouldn't actually change the text.
      */
-    
+
     int this_cpu_int = (int)(vsync_metric_cpu_percent  * pow(10, CPU_DECIMAL_PLACES) + 0.5);
     int this_fps_int = (int)(vsync_metric_emulated_fps * pow(10, FPS_DECIMAL_PLACES) + 0.5);
     bool is_paused = ui_pause_active();
-    
+
     if (state->last_cpu_int != this_cpu_int || state->last_warp != vsync_metric_warp_enabled || state->last_paused != is_paused) {
-        
+
         /* get grid containing the two labels */
         grid = gtk_bin_get_child(GTK_BIN(widget));
-        
+
         /* get CPU/Warp label and update its text */
         label = gtk_grid_get_child_at(GTK_GRID(grid), 0, 0);
-        
-        g_snprintf(buffer, sizeof(buffer), "%9." STR(CPU_DECIMAL_PLACES) "f%% cpu%s",
-                   vsync_metric_cpu_percent,
-                   is_paused ? " (paused)" : (vsync_metric_warp_enabled ? " (warp)" : ""));
-        
+
+        g_snprintf(buffer,
+                   sizeof(buffer),
+                   "%9." STR(CPU_DECIMAL_PLACES) "f%% cpu",
+                   vsync_metric_cpu_percent);
+
         gtk_label_set_text(GTK_LABEL(label), buffer);
-        
+
+        /* update status label */
+        label = gtk_grid_get_child_at(GTK_GRID(grid), 0, 2);
+        if (!is_paused && !vsync_metric_warp_enabled) {
+            /* no pause, no warp */
+            gtk_label_set_text(GTK_LABEL(label), "");
+        } else if (!is_paused && vsync_metric_warp_enabled) {
+            /* warp */
+            gtk_label_set_text(GTK_LABEL(label), "[Warp]");
+        } else if (is_paused && !vsync_metric_warp_enabled) {
+            /* pause */
+            gtk_label_set_text(GTK_LABEL(label), "[Paused)");
+        } else {
+            /* pause and warp */
+            gtk_label_set_text(GTK_LABEL(label), "[Paused] [Warp]");
+        }
+
         state->last_cpu_int = this_cpu_int;
         state->last_warp = vsync_metric_warp_enabled;
         state->last_paused = is_paused;
     }
-    
+
     if (window_identity == PRIMARY_WINDOW) {
         if (state->last_fps_int != this_fps_int) {
-            
+
             if (grid == NULL) {
                 grid = gtk_bin_get_child(GTK_BIN(widget));
             }
-            
+
             /* get FPS/Pause label and update its text */
             label = gtk_grid_get_child_at(GTK_GRID(grid), 0, 1);
-            
-            g_snprintf(buffer, sizeof(buffer), "%10." STR(FPS_DECIMAL_PLACES) "f fps", vsync_metric_emulated_fps);
-            
+
+            g_snprintf(buffer,
+                       sizeof(buffer),
+                       "%10." STR(FPS_DECIMAL_PLACES) "f fps",
+                       vsync_metric_emulated_fps);
+
             gtk_label_set_text(GTK_LABEL(label), buffer);
-            
+
             state->last_fps_int = this_fps_int;
         }
     }
-    
+
 #   undef CPU_DECIMAL_PLACES
 #   undef FPS_DECIMAL_PLACES
 #   undef STR_

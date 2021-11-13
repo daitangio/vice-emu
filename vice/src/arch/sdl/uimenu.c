@@ -90,6 +90,8 @@ static uint16_t sdl_monitor_translation[256];
  * Used to properly clean up when 'Quit emu' is triggered
  */
 static uint8_t *draw_buffer_backup = NULL;
+static unsigned int draw_buffer_backup_width = 0;
+static unsigned int draw_buffer_backup_height = 0;
 
 /** \brief  Reference to menu offsets allocated in sdl_ui_menu_get_offsets()
  *
@@ -727,8 +729,11 @@ void sdl_ui_create_draw_buffer_backup(void)
 {
     unsigned int width = sdl_active_canvas->draw_buffer->draw_buffer_width;
     unsigned int height = sdl_active_canvas->draw_buffer->draw_buffer_height;
+
     draw_buffer_backup = lib_malloc(width * height);
     memcpy(draw_buffer_backup, sdl_active_canvas->draw_buffer->draw_buffer, width * height);
+    draw_buffer_backup_width = width;
+    draw_buffer_backup_height = height;
 }
 
 /* copy the backup of the emulator output back to the canvas */
@@ -736,7 +741,8 @@ void sdl_ui_restore_draw_buffer_backup(void)
 {
     unsigned int width = sdl_active_canvas->draw_buffer->draw_buffer_width;
     unsigned int height = sdl_active_canvas->draw_buffer->draw_buffer_height;
-    if (draw_buffer_backup) {
+
+    if (draw_buffer_backup && draw_buffer_backup_width == width && draw_buffer_backup_height == height) {
         memcpy(sdl_active_canvas->draw_buffer->draw_buffer, draw_buffer_backup, width * height);
     }
 }
@@ -1306,8 +1312,6 @@ void sdl_ui_activate_pre_action(void)
 /* called when UI closes and emulator resumes by sdl_ui_trap, sdl_vkbd_key_map, uimon_window_close */
 void sdl_ui_activate_post_action(void)
 {
-    int warp_state;
-
     DBG(("sdl_ui_activate_post_action start\n"));
 
     sdl_menu_state = 0;
@@ -1317,8 +1321,7 @@ void sdl_ui_activate_post_action(void)
 #endif
 
     /* Do not resume sound if in warp mode */
-    resources_get_int("WarpMode", &warp_state);
-    if (warp_state == 0) {
+    if (!vsync_get_warp_mode()) {
         sound_resume();
     }
 
