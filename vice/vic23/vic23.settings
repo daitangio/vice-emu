@@ -32,21 +32,18 @@ Acia1Base=38912
 [PLUS4]
 SaveResourcesOnExit=1
 ConfirmOnExit=0
-Window0Height=663
+Window0Height=736
 Window0Width=797
-Window0Xpos=119
-Window0Ypos=164
+Window0Xpos=923
+Window0Ypos=158
 Speed=-51
-SoundDeviceName="pulse"
+KeymapSymFile="gtk3_sym_it.vkm"
 KeymapUserSymFile="/home/jj/code/vice/vice-emu-git/vice/vic23/plus4-it-keymap.vkm"
-KeymapIndex=2
+KeyboardMapping=7
 KbdStatusbar=1
 FunctionLowName=""
 FunctionHighName=""
-TEDVideoCache=0
 TEDFilter=0
-SidEngine=1
-SidModel=0
 Acia1Enable=0
 IECDevice8=1
 KeySet1North=65362
@@ -56,7 +53,6 @@ KeySet1West=65361
 KeySet1Fire=65508
 FSDevice8Dir="/home/jj/code/vice/vice-emu-git/vice/vic23"
 FSDeviceOverwrite=1
-DriveTrueEmulation=0
 DriveSoundEmulation=1
 
 [C128]
