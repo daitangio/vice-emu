@@ -935,7 +935,11 @@ void machine_specific_reset(void)
 
 void machine_specific_powerup(void)
 {
+    cartridge_powerup();
     ted_reset_registers();
+    userport_powerup();
+    tapeport_powerup();
+    joyport_powerup();
 }
 
 void machine_specific_shutdown(void)
@@ -951,6 +955,8 @@ void machine_specific_shutdown(void)
 #ifdef HAVE_MOUSE
     mouse_shutdown();
 #endif
+
+    sidcart_cmdline_options_shutdown();
 
     if (!console_mode) {
         plus4ui_shutdown();

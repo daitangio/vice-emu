@@ -55,10 +55,12 @@
 #include "vsync.h"
 #include "uiapi.h"
 #include "ui.h"
-#include "uicommands.h"
 #include "uimachinemenu.h"
 #include "uimachinewindow.h"
+#include "uisettings.h"
 #include "widgethelpers.h"
+
+#include "uicommands.h"
 
 
 static gboolean controlport_swapped = FALSE;
@@ -147,14 +149,16 @@ gboolean ui_action_toggle_controlport_swap(void)
  *
  * \return  TRUE (so the UI eats the event)
  *
- * TODO:    refactor into `gboolean ui_action_toggle_keyset_swap(void)`
  */
-gboolean ui_toggle_keyset_joysticks(GtkWidget *widget, gpointer data)
+gboolean ui_action_toggle_keyset_joystick(void)
 {
     int enable;
 
     resources_get_int("KeySetEnable", &enable);
     resources_set_int("KeySetEnable", !enable);
+
+    ui_set_gtk_check_menu_item_blocked_by_name(ACTION_KEYSET_JOYSTICK_TOGGLE,
+                                               !enable);
 
     return TRUE;    /* don't let any shortcut key end up in the emulated machine */
 }
@@ -178,7 +182,7 @@ gboolean ui_action_toggle_mouse_grab(void)
     mouse = !mouse;
 
     if (mouse) {
-        ui_menu_item_t *item = ui_get_vice_menu_item_by_name("mouse-grab-toggle");
+        ui_menu_item_t *item = ui_get_vice_menu_item_by_name(ACTION_MOUSE_GRAB_TOGGLE);
         gchar *name = gtk_accelerator_name(item->keysym, item->modifier);
         g_snprintf(title, sizeof(title),
                 "VICE (%s) (Use %s to disable mouse grab)",
@@ -193,7 +197,7 @@ gboolean ui_action_toggle_mouse_grab(void)
     window = ui_get_active_window();
     gtk_window_set_title(window, title);
 
-    ui_set_gtk_check_menu_item_blocked_by_name("toggle-mouse-grab", mouse);
+    ui_set_gtk_check_menu_item_blocked_by_name(ACTION_MOUSE_GRAB_TOGGLE, mouse);
 
     return TRUE;    /* don't let any shortcut key end up in the emulated machine */
 }
@@ -502,5 +506,19 @@ gboolean ui_restore_default_settings(GtkWidget *widget, gpointer data)
             "The new settings will not be saved until using the 'Save"
             " settings' menu item, or having 'Save on exit' enabled and"
             " exiting VICE.");
+    return TRUE;
+}
+
+
+/** \brief  Show settings dialog with hotkeys node activated
+ *
+ * \param[in]   widget  parent widget (unused)
+ * \param[in]   data    extra event data (unused)
+ *
+ * \return  TRUE to signal the accelerator event has been consumed.
+ */
+gboolean ui_popup_hotkeys_settings(GtkWidget *widget, gpointer data)
+{
+    ui_settings_dialog_create_and_activate_node("host/hotkeys");
     return TRUE;
 }

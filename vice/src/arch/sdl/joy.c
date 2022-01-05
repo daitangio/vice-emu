@@ -68,7 +68,7 @@ static int autorepeat_delay;
 static char *joymap_file = NULL;
 
 /* Total number of joysticks */
-static int num_joysticks;
+static int num_joysticks = 0;
 
 /* Joystick threshold (0..32767) */
 static int joystick_threshold;
@@ -140,11 +140,16 @@ struct sdljoystick_mapping_s {
 };
 typedef struct sdljoystick_mapping_s sdljoystick_mapping_t;
 
+#ifndef USE_SDLUI2
+typedef int SDL_JoystickID;
+#endif
+
 struct sdljoystick_s {
     SDL_Joystick *joyptr;
     char *name;
     int input_max[NUM_INPUT_TYPES];
     sdljoystick_mapping_t *input[NUM_INPUT_TYPES];
+    SDL_JoystickID joystickid;
 };
 typedef struct sdljoystick_s sdljoystick_t;
 
@@ -365,26 +370,60 @@ int joy_sdl_cmdline_options_init(void)
  **********************************************************/
 int joy_sdl_init(void)
 {
-    int i, axis, button, hat, ball;
-    sdljoystick_input_t j;
-    SDL_Joystick *joy;
-
-    sdljoystick = NULL;
-
     sdljoy_log = log_open("SDLJoystick");
 
     if (SDL_InitSubSystem(SDL_INIT_JOYSTICK)) {
         log_error(sdljoy_log, "Subsystem init failed!");
         return -1;
     }
+    
+    sdljoy_rescan();
+
+    return 0;
+}
+
+int sdljoy_rescan(void)
+{
+    int i, k, axis, button, hat, ball;
+    sdljoystick_input_t j;
+    SDL_Joystick *joy;
+    sdljoystick_t *sdljoystick_old = sdljoystick;
+    int num_joysticks_old = num_joysticks;
+
+    SDL_JoystickEventState(SDL_DISABLE);
+
+    /* close all joysticks */
+    for (i = 0; i < num_joysticks; ++i) {
+        if (sdljoystick[i].joyptr) {
+#ifdef USE_SDLUI2
+            if (SDL_JoystickGetAttached(sdljoystick[i].joyptr)) {
+                SDL_JoystickClose(sdljoystick[i].joyptr);
+            }
+#else
+            SDL_JoystickClose(sdljoystick[i].joyptr);
+#endif
+        }
+    }
 
     num_joysticks = SDL_NumJoysticks();
 
     if (num_joysticks == 0) {
         log_message(sdljoy_log, "No joysticks found");
+        for (i = 0; i < num_joysticks_old; ++i) {
+            lib_free(sdljoystick[i].name);
+            sdljoystick[i].name = NULL;
+
+            for (j = AXIS; j < NUM_INPUT_TYPES; ++j) {
+                lib_free(sdljoystick[i].input[j]);
+                sdljoystick[i].input[j] = NULL;
+            }
+        }
+        lib_free(sdljoystick);
+        sdljoystick = NULL;
+        SDL_JoystickEventState(SDL_ENABLE);
         return 0;
     }
-
+        
     log_message(sdljoy_log, "%i joysticks found", num_joysticks);
 
     sdljoystick = lib_malloc(sizeof(sdljoystick_t) * num_joysticks);
@@ -392,10 +431,12 @@ int joy_sdl_init(void)
     for (i = 0; i < num_joysticks; ++i) {
         joy = sdljoystick[i].joyptr = SDL_JoystickOpen(i);
         if (joy) {
-#ifndef USE_SDLUI2
-            sdljoystick[i].name = lib_strdup(SDL_JoystickName(i));
-#else
+#ifdef USE_SDLUI2
             sdljoystick[i].name = lib_strdup(SDL_JoystickName(sdljoystick[i].joyptr));
+            sdljoystick[i].joystickid = SDL_JoystickInstanceID(joy);
+#else
+            sdljoystick[i].name = lib_strdup(SDL_JoystickName(i));
+            sdljoystick[i].joystickid = SDL_JoystickIndex(joy);
 #endif
             axis = sdljoystick[i].input_max[AXIS] = SDL_JoystickNumAxes(joy);
             button = sdljoystick[i].input_max[BUTTON] = SDL_JoystickNumButtons(joy);
@@ -410,15 +451,51 @@ int joy_sdl_init(void)
                 }
             }
 
-            log_message(sdljoy_log, "Device %i \"%s\" (%i axes, %i buttons, %i hats, %i balls)", i, sdljoystick[i].name, axis, button, hat, ball);
+            /* only use default mapping if previously there were no joysticks found */
+            if (num_joysticks_old == 0) {
+                joy_arch_init_default_mapping(i);
+            }
 
-            joy_arch_init_default_mapping(i);
+            log_message(sdljoy_log, "Device %i \"%s\" (%i axes, %i buttons, %i hats, %i balls)", i, sdljoystick[i].name, axis, button, hat, ball);
         } else {
             log_warning(sdljoy_log, "Couldn't open joystick %i", i);
         }
     }
 
-    joy_arch_mapping_load(joymap_file);
+    /* only load joy map file if previously there were no joysticks found */
+    if (num_joysticks_old == 0) {
+        joy_arch_mapping_load(joymap_file);
+    }
+
+    /* copy over input mapping customisations from this session */
+    for (i = 0; i < num_joysticks; ++i) {
+        for (k = 0; k < num_joysticks_old; ++k) {
+            if (sdljoystick[i].joystickid == sdljoystick_old[k].joystickid) {
+                for (j = AXIS; j < NUM_INPUT_TYPES; ++j) {
+                    if (sdljoystick[i].input[j] != NULL) {
+                        lib_free(sdljoystick[i].input[j]);
+                    }
+                    sdljoystick[i].input[j] = sdljoystick_old[k].input[j];
+                    sdljoystick_old[k].input[j] = NULL;
+                }
+            }
+        }
+    }
+
+    for (i = 0; i < num_joysticks_old; ++i) {
+        lib_free(sdljoystick_old[i].name);
+        sdljoystick_old[i].name = NULL;
+
+        for (j = AXIS; j < NUM_INPUT_TYPES; ++j) {
+            if (sdljoystick_old[i].input[j] != NULL) {
+                lib_free(sdljoystick_old[i].input[j]);
+                sdljoystick_old[i].input[j] = NULL;
+            }
+        }
+    }
+
+    lib_free(sdljoystick_old);
+    sdljoystick_old = NULL;
 
     SDL_JoystickEventState(SDL_ENABLE);
     return 0;
@@ -993,24 +1070,34 @@ static sdljoystick_mapping_t *sdljoy_get_mapping(SDL_Event e)
 {
     sdljoystick_mapping_t *retval = NULL;
     uint8_t cur;
+    int joynum;
 
     switch (e.type) {
         case SDL_JOYAXISMOTION:
             cur = sdljoy_axis_direction(e.jaxis.value, 0);
             if (cur > 0) {
                 --cur;
-                retval = &(sdljoystick[e.jaxis.which].input[AXIS][e.jaxis.axis * input_mult[AXIS] + cur]);
+                joynum = sdljoy_get_joynum_for_event(e.jaxis.which);
+                if (joynum != -1) {
+                    retval = &(sdljoystick[joynum].input[AXIS][e.jaxis.axis * input_mult[AXIS] + cur]);
+                }
             }
             break;
         case SDL_JOYHATMOTION:
             cur = sdljoy_hat_direction(e.jhat.value, 0);
             if (cur > 0) {
                 --cur;
-                retval = &(sdljoystick[e.jhat.which].input[HAT][e.jhat.hat * input_mult[HAT] + cur]);
+                joynum = sdljoy_get_joynum_for_event(e.jhat.which);
+                if (joynum != -1) {
+                    retval = &(sdljoystick[joynum].input[HAT][e.jhat.hat * input_mult[HAT] + cur]);
+                }
             }
             break;
         case SDL_JOYBUTTONDOWN:
-            retval = &(sdljoystick[e.jbutton.which].input[BUTTON][e.jbutton.button]);
+            joynum = sdljoy_get_joynum_for_event(e.jbutton.which);
+            if (joynum != -1) {
+                retval = &(sdljoystick[joynum].input[BUTTON][e.jbutton.button]);
+            }
             break;
         default:
             break;
@@ -1116,7 +1203,7 @@ uint8_t sdljoy_check_axis_movement(SDL_Event e)
     Uint8 axis;
     Sint16 value;
 
-    joynum = e.jaxis.which;
+    joynum = sdljoy_get_joynum_for_event(e.jaxis.which);    
     axis = e.jaxis.axis;
     value = e.jaxis.value;
 
@@ -1141,7 +1228,7 @@ uint8_t sdljoy_check_hat_movement(SDL_Event e)
     Uint8 hat;
     Uint8 value;
 
-    joynum = e.jhat.which;
+    joynum = sdljoy_get_joynum_for_event(e.jhat.which);
     hat = e.jhat.hat;
     value = e.jhat.value;
 
@@ -1156,6 +1243,19 @@ uint8_t sdljoy_check_hat_movement(SDL_Event e)
 
     sdljoystick[joynum].input[HAT][index].prev = value;
     return cur;
+}
+
+int sdljoy_get_joynum_for_event(Uint8 event_device_id)
+{
+    int i;
+    
+    for (i = 0; i < num_joysticks; i++) {
+        if (sdljoystick[i].joystickid == event_device_id) {
+            return i;
+        }
+    }
+    
+    return -1;
 }
 
 ui_menu_action_t sdljoy_axis_event(Uint8 joynum, Uint8 axis, Sint16 value)
@@ -1293,9 +1393,13 @@ void sdljoy_set_joystick(SDL_Event e, int port, int bits)
 void sdljoy_set_joystick_axis(SDL_Event e, int port, int pot)
 {
     int index = (port << 1) | pot;
-    uint8_t stick = e.jaxis.which;
     uint8_t axis = e.jaxis.axis;
     sdljoystick_mapping_t *joyevent = sdljoy_get_mapping(e);
+    int joynum = sdljoy_get_joynum_for_event(e.jaxis.which);
+    
+    if (joynum == -1) {
+        return;
+    }
 
     if (joyevent != NULL) {
         joyevent->action = POT_AXIS;
@@ -1304,7 +1408,7 @@ void sdljoy_set_joystick_axis(SDL_Event e, int port, int pot)
     }
 
     if (index <= 3) {
-        sdljoystick_axis_mapping[index] = (stick << 8) | axis;
+        sdljoystick_axis_mapping[index] = (joynum << 8) | axis;
     }
 }
 

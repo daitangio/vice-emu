@@ -59,3 +59,5 @@ libvideo_a_SOURCES = \
 	video-sound.c \
 	video-sound.h \
 	video-viewport.c
+
+EXTRA_DIST = render-common.c

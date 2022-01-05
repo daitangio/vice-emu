@@ -430,6 +430,10 @@ const char *tape_get_file_name(int port)
     return NULL;
 }
 
+int tapeport_valid_port(int port)
+{
+    return 0;
+}
 
 /*****************************************************************************
  *  tapecart                                                                 *
@@ -996,6 +1000,16 @@ unsigned int drive_get_half_tracks(unsigned int type)
     return 0;
 }
 
+bool drive_is_jammed(int mynumber)
+{
+    return false;
+}
+
+char *drive_jam_reason(int mynumber)
+{
+    return NULL;
+}
+
 userport_desc_t *userport_get_valid_devices(int sort)
 {
     return NULL;
@@ -1019,11 +1033,6 @@ const char *tapeport_get_device_type_desc(int type)
 #endif
 
 void userport_io_sim_set_pbx_out_lines(uint8_t val)
-{
-    return;
-}
-
-void userport_io_sim_set_pbx_ddr_lines(uint8_t val)
 {
     return;
 }

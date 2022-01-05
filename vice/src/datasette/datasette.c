@@ -907,6 +907,10 @@ static void datasette_internal_reset(int port)
 {
     int mode = current_image[port] ? current_image[port]->mode : notape_mode[port];
 
+    if (!tapeport_valid_port(port)) {
+        return;
+    }
+
     DBG(("datasette_internal_reset (mode:%d)", mode));
 
     if (mode == DATASETTE_CONTROL_START ||
@@ -929,6 +933,7 @@ static void datasette_internal_reset(int port)
     motor_stop_clk[port] = 0;
     datasette_update_ui_counter(port);
     ui_display_tape_motor_status(port, 0);
+    ui_display_reset(port + 1, 0);
     fullwave[port] = 0;
 }
 

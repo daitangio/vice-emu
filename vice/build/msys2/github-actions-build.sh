@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
+#
+# Usage: github-actions-build.sh <UI> [SVN rXXXXX override, or 'release']
+
 set -o errexit
 set -o nounset
 cd "$(dirname $0)"/../..
 
 #
 # Build and install xa65. When this stops working, check
-# https://www.floodgap.com/retrotech/xa/dists/ for a newer version.
+# https://www.floodgap.com/retrotech/xa/dists/ to see why
 #
 
-XA_VERSION=2.3.11
+XA_VERSION=$(wget --tries=1 -O - https://www.floodgap.com/retrotech/xa/dists/ 2>/dev/null | grep '"xa-[^"]*gz"' | sed -e 's,.*xa-,,' -e 's,.tar.gz.*,,' | sort -V | tail -n1)
 
 if [ ! -e /usr/local/bin/xa65.exe ]
 then
@@ -53,7 +56,13 @@ SDL2)
     ;;
 esac
 
-./autogen.sh
-./configure $ARGS SVN_REVISION_OVERRIDE=$(echo "$2" | sed 's/^r//') || ( echo -e "\n**** CONFIGURE FAILED ****\n" ; cat config.log ; exit 1 )
+# Skip autogen.sh when building release from tarball
+if [ "$2" = "release" ]; then
+    ./configure $ARGS || ( echo -e "\n**** CONFIGURE FAILED ****\n" ; cat config.log ; exit 1 )
+else
+    ./autogen.sh
+    ./configure $ARGS SVN_REVISION_OVERRIDE=$(echo "$2" | sed 's/^r//') || ( echo -e "\n**** CONFIGURE FAILED ****\n" ; cat config.log ; exit 1 )
+fi
+
 make -j $(( $NUMBER_OF_PROCESSORS )) -s
 make bindistzip

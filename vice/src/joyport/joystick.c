@@ -743,9 +743,9 @@ void joystick_set_snes_mapping(int port)
 
 static int joyport_enable_joystick(int port, int val)
 {
-    joyport_joystick[port] = (val) ? 1 : 0;
     joyport_mapping_t *mapping = NULL;
 
+    joyport_joystick[port] = (val) ? 1 : 0;
     if (val) {
         if (port == JOYPORT_1 || port == JOYPORT_2 || (port == JOYPORT_6 && machine_class == VICE_MACHINE_PLUS4)) {
             if (joyport_port_has_pot(port)) {
@@ -803,6 +803,7 @@ static joyport_t joystick_device = {
     NULL,                           /* NO digital line store function */
     read_potx,                      /* pot-x read function */
     read_poty,                      /* pot-y read function */
+    NULL,                           /* NO powerup function */
     joystick_snapshot_write_module, /* device write snapshot function */
     joystick_snapshot_read_module,  /* device read snapshot function */
     NULL,                           /* NO device hook function */
@@ -1581,7 +1582,7 @@ int joystick_init(void)
     joy_hidlib_init();
 #elif defined HAVE_DINPUT
     if (win32_directinput_joystick_init()) {
-	}
+    }
 #elif defined HAVE_SDL_NUMJOYSTICKS
     joy_sdl_init();
 #endif

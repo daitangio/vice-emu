@@ -140,6 +140,7 @@ static joyport_t joyport_multijoy_joy_device = {
     NULL,                                    /* NO digital line store function */
     NULL,                                    /* NO pot-x read function */
     NULL,                                    /* NO pot-y read function */
+    NULL,                                    /* NO powerup function */
     multijoy_write_snapshot,                 /* device write snapshot function */
     multijoy_read_snapshot,                  /* device read snapshot function */
     NULL,                                    /* NO device hook function */
@@ -159,6 +160,7 @@ static joyport_t joyport_multijoy_control_device = {
     multijoy_store,                      /* digital line store function */
     NULL,                                /* NO pot-x read function */
     NULL,                                /* NO pot-y read function */
+    NULL,                                /* NO powerup function */
     NULL,                                /* NO device write snapshot function */
     NULL,                                /* NO device read snapshot function */
     NULL,                                /* NO device hook function */
@@ -184,7 +186,7 @@ int joyport_multijoy_resources_init(void)
    BYTE  | ADDRESS | which joystick is active
  */
 
-static char snap_module_name[] = "MULTIJOY";
+static const char snap_module_name[] = "MULTIJOY";
 #define SNAP_MAJOR   0
 #define SNAP_MINOR   0
 

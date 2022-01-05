@@ -78,7 +78,9 @@
 #include "uiapi.h"
 #include "uicommands.h"
 #include "uimachinemenu.h"
+#include "uimedia.h"
 #include "uimenu.h"
+#include "uimon.h"
 #include "uisettings.h"
 #include "uistatusbar.h"
 #include "jamdialog.h"
@@ -1046,12 +1048,18 @@ static int set_monitor_font(const char *val, void *param)
  * \param[in]   val     color
  * \param[in]   param   extra argument (unused)
  *
- * \return  0 (success)
+ * \return  0 on success, -1 if \a val could not be parsed by gdk_rgba_parse()
  */
 static int set_monitor_bg(const char *val, void *param)
 {
-    util_string_set(&ui_resources.monitor_bg, val);
-    return 0;
+    GdkRGBA color;
+
+    if (gdk_rgba_parse(&color, val)) {
+        util_string_set(&ui_resources.monitor_bg, val);
+        uimon_set_background_color(val);
+        return 0;
+    }
+    return -1;
 }
 
 
@@ -1060,17 +1068,19 @@ static int set_monitor_bg(const char *val, void *param)
  * \param[in]   val     color
  * \param[in]   param   extra argument (unused)
  *
- * \return  0 (success)
+ * \return  0 on success, -1 if \a val could not be parsed by gdk_rgba_parse()
  */
 static int set_monitor_fg(const char *val, void *param)
 {
-    util_string_set(&ui_resources.monitor_fg, val);
-    return 0;
+    GdkRGBA color;
+
+    if (gdk_rgba_parse(&color, val)) {
+        util_string_set(&ui_resources.monitor_fg, val);
+        uimon_set_foreground_color(val);
+        return 0;
+    }
+    return -1;
 }
-
-
-
-
 
 
 /** \brief  Set Window[X]Width resource (int)
@@ -1424,12 +1434,10 @@ static gboolean rendering_area_event_handler(GtkWidget *canvas,
  *
  * \param[in]   canvas  the video_canvas_s to initialize
  *
- * \warning The code that calls this apparently creates the VDC window
- *          for x128 before the VIC window (primary) - this is
- *          probably done so the VIC window ends up being on top of
- *          the VDC window. however, we better call some "move window
- *          to front" function instead, and create the windows
- *          starting with the primary one.
+ * \warning The order of the windows created for x128 depends on the order of
+ *          the calls to vicii_init() and vdc_init() in src/c128/c128.c.
+ *          That order is currently set to vicii before vdc so we get the proper
+ *          window indexes. There has to be a better way.
  */
 void ui_create_main_window(video_canvas_t *canvas)
 {
@@ -1456,6 +1464,7 @@ void ui_create_main_window(video_canvas_t *canvas)
     int minimized = 0;
     int full = 0;
     int restore;
+    int restored = 0;
 
     if (machine_class != VICE_MACHINE_VSID) {
         resources_get_int("Mouse", &mouse_grab);
@@ -1480,7 +1489,7 @@ void ui_create_main_window(video_canvas_t *canvas)
     if (!mouse_grab) {
         g_snprintf(title, 256, "VICE (%s)", machine_get_name());
     } else {
-        ui_menu_item_t *item = ui_get_vice_menu_item_by_name("mouse-grab-toggle");
+        ui_menu_item_t *item = ui_get_vice_menu_item_by_name(ACTION_MOUSE_GRAB_TOGGLE);
         gchar *name = gtk_accelerator_name(item->keysym, item->modifier);
 
         g_snprintf(title, 256, "VICE (%s) (Use %s to disable mouse grab)",
@@ -1617,8 +1626,21 @@ void ui_create_main_window(video_canvas_t *canvas)
         } else {
             gtk_window_move(GTK_WINDOW(new_window), xpos, ypos);
             gtk_window_resize(GTK_WINDOW(new_window), width, height);
+            restored = 1;
         }
     }
+
+    if (!restored) {
+        /*
+         * If not restoring location and size from config, attempt to place
+         * the new application window centred on the active screen at launch.
+         * Doesn't work perfectly because the size of the UI at this point
+         * doesn't include the size of the canvas. But it's better than 0,0
+         * on some random screen.
+         */
+        gtk_window_set_position(GTK_WINDOW(new_window), GTK_WIN_POS_CENTER);
+    }
+
 
     /*
      * Do we start minimized?
@@ -1644,16 +1666,20 @@ void ui_create_main_window(video_canvas_t *canvas)
     }
 
 
-    /* VSID doesn't have the keyboard debugging widget on the statusbar
-     *
-     * But it's still added, so disable always. Probably a big FIXME
+    /* set any menu checkboxes that aren't connected to resources */
+
+    /* FIXME:   This is apparently too early in the boot sequence for -warp
+     *          to take effect.
      */
+    ui_set_gtk_check_menu_item_blocked_by_name(ACTION_WARP_MODE_TOGGLE,
+                                               vsync_get_warp_mode());
+
     if (machine_class != VICE_MACHINE_VSID) {
 
         if (resources_get_int("KbdStatusbar", &kbd_status) < 0) {
             kbd_status = 0;
         }
-        ui_statusbar_set_kbd_debug(kbd_status);
+        ui_statusbar_set_kbd_debug_for_window(new_window, kbd_status);
     }
 
     if (grid != NULL) {
@@ -1732,6 +1758,7 @@ void ui_destroy_main_window(int index)
     video_canvas_t *canvas;
 
     window = ui_resources.window_widget[index];
+    ui_resources.window_widget[index] = NULL;
 
     if (!window) {
         /* This function is called blindly for both primary and secondary windows */
@@ -2072,8 +2099,11 @@ void ui_dispatch_events(void)
 static gboolean ui_error_impl(gpointer user_data)
 {
     char *buffer = (char *)user_data;
+    GtkWidget *dialog;
 
-    vice_gtk3_message_error("VICE Error", buffer);
+    dialog = vice_gtk3_message_error("VICE Error", buffer);
+    gtk_dialog_run(GTK_DIALOG(dialog));
+
     lib_free(buffer);
 
     return FALSE;
@@ -2116,27 +2146,45 @@ void ui_message(const char *format, ...)
 }
 
 
-/** \brief  Keeps the ui events going while the emulation is paused
+/** \brief Perform a single iteration of the pause loop
  *
- * \param[in]   addr    unused
- * \param[in]   data    unused
+ * \return boolean whether to keep iterating
  */
-static void pause_trap(uint16_t addr, void *data)
+bool ui_pause_loop_iteration(void)
+{
+    if (!is_paused) {
+        return false;
+    }
+
+    /* Exit pause loop to enter monitor if needed. */
+    if (enter_monitor_while_paused) {
+        enter_monitor_while_paused = 0;
+        monitor_startup_trap();
+        return false;
+    }
+    
+    /* Otherwise give the UI the lock for a while */
+    tick_sleep(tick_per_second() / 60);
+    
+    /* Another iteration needed unless pause was disabled during sleep */
+    return is_paused;
+}
+
+
+/** \brief  Keeps the ui events going while the emulation is paused
+ */
+static void pause_loop(void *param)
 {
     vsync_suspend_speed_eval();
     sound_suspend();
-
-    is_paused = 1;
-
-    while (is_paused)
-    {
-        tick_sleep(tick_per_second() / 60);
-
-        /* Enter monitor directly if needed. */
-        if (enter_monitor_while_paused) {
-            enter_monitor_while_paused = 0;
-            monitor_startup(e_default_space);
-        }
+    
+    if (ui_pause_loop_iteration()) {
+        /*
+         * Still paused, schedule another run. Doing it this way allows
+         * other, perhaps newly queued, vsync_on_vsync_do callcacks to
+         * be called.
+         */
+        vsync_on_vsync_do(pause_loop, NULL);
     }
 }
 
@@ -2155,8 +2203,10 @@ int ui_pause_active(void)
  */
 void ui_pause_enable(void)
 {
-    is_paused = 1;
-    interrupt_maincpu_trigger_trap(pause_trap, 0);
+    if (!is_paused) {
+        is_paused = 1;
+        vsync_on_vsync_do(pause_loop, NULL);
+    }
 }
 
 
@@ -2195,7 +2245,7 @@ void ui_pause_toggle(void)
 gboolean ui_action_toggle_pause(void)
 {
     ui_pause_toggle();
-    ui_set_gtk_check_menu_item_blocked_by_name("toggle-pause",
+    ui_set_gtk_check_menu_item_blocked_by_name(ACTION_PAUSE_TOGGLE,
                                                (gboolean)ui_pause_active());
 
     return TRUE;    /* has to be TRUE to avoid passing Alt+P into the emu */
@@ -2210,7 +2260,7 @@ gboolean ui_action_toggle_pause(void)
 gboolean ui_action_toggle_warp(void)
 {
     vsync_set_warp_mode(!vsync_get_warp_mode());
-    ui_set_gtk_check_menu_item_blocked_by_name("toggle-warp-mode",
+    ui_set_gtk_check_menu_item_blocked_by_name(ACTION_WARP_MODE_TOGGLE,
                                                (gboolean)vsync_get_warp_mode());
 
     return TRUE;
@@ -2231,6 +2281,8 @@ gboolean ui_action_advance_frame(void)
         vsyncarch_advance_frame();
     } else {
         ui_pause_enable();
+        ui_set_gtk_check_menu_item_blocked_by_name(ACTION_PAUSE_TOGGLE,
+                                                   (gboolean)ui_pause_active());
     }
 
     return TRUE;    /* has to be TRUE to avoid passing Alt+SHIFT+P into the emu */
@@ -2251,6 +2303,7 @@ void ui_exit(void)
         ui_disk_attach_shutdown();
         ui_tape_attach_shutdown();
         ui_smart_attach_shutdown();
+        ui_media_shutdown();
     }
 
     ui_settings_shutdown();
@@ -2262,6 +2315,11 @@ void ui_exit(void)
     /* unregister the CBM font */
     archdep_unregister_cbmfont();
 
+    /* Show any async errors that haven't been shown yet. */
+    while (gtk_events_pending()) {
+        gtk_main_iteration();
+    }
+
     mainlock_release();
 }
 
@@ -2271,16 +2329,21 @@ void ui_update_lightpen(void)
 {
     video_canvas_t *canvas;
     canvas = ui_resources.canvas[PRIMARY_WINDOW];
+
     if (machine_class == VICE_MACHINE_C128) {
         /* According to lightpen.c, x128 flips primary and secondary
          * windows compared to what the GTK3 backend expects. */
         if (canvas) {
+            pthread_mutex_lock(&canvas->lock);
             lightpen_update(1, canvas->pen_x, canvas->pen_y, canvas->pen_buttons);
+            pthread_mutex_unlock(&canvas->lock);
         }
         canvas = ui_resources.canvas[SECONDARY_WINDOW];
     }
     if (canvas) {
+        pthread_mutex_lock(&canvas->lock);
         lightpen_update(0, canvas->pen_x, canvas->pen_y, canvas->pen_buttons);
+        pthread_mutex_unlock(&canvas->lock);
     }
 }
 

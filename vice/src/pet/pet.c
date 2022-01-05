@@ -736,6 +736,9 @@ void machine_specific_powerup(void)
 {
     petdww_powerup();
     pethre_powerup();
+    userport_powerup();
+    tapeport_powerup();
+    joyport_powerup();
 }
 
 /* PET-specific initialization.  */
@@ -779,6 +782,8 @@ void machine_specific_shutdown(void)
 #ifdef HAVE_MOUSE
     mouse_shutdown();
 #endif
+
+    sidcart_cmdline_options_shutdown();
 
     if (!console_mode) {
         petui_shutdown();

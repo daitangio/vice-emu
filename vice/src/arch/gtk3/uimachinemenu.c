@@ -76,7 +76,6 @@
 #include "uidiskcreate.h"
 #include "uiedit.h"
 #include "uifliplist.h"
-#include "uihotkeys.h"
 #include "uimedia.h"
 #include "uimenu.h"
 #include "uimonarch.h"
@@ -85,6 +84,7 @@
 #include "uisnapshot.h"
 #include "uitapeattach.h"
 #include "uitapecreate.h"
+#include "vsync.h"
 
 #include "uimachinemenu.h"
 
@@ -652,6 +652,7 @@ static ui_menu_item_t file_menu_tail[] = {
     { "Activate monitor", UI_MENU_TYPE_ITEM_ACTION,
       ACTION_MONITOR_OPEN,
       ui_monitor_activate_callback, NULL,
+      /* XXX: This bit doesn't work anymore since the custom hotkeys. */
 #ifdef MACOSX_SUPPORT
       /* use Command-Option-M on Mac */
       GDK_KEY_M, VICE_MOD_MASK | GDK_MOD1_MASK,
@@ -758,7 +759,7 @@ static ui_menu_item_t snapshot_menu[] = {
 static ui_menu_item_t settings_menu_head[] = {
     { "Fullscreen", UI_MENU_TYPE_ITEM_CHECK,
       ACTION_FULLSCREEN_TOGGLE,
-      (void *)ui_action_toggle_fullscreen, NULL,
+      (void *)ui_action_toggle_fullscreen, "FullscreenEnable",
       GDK_KEY_D, VICE_MOD_MASK, true },
     { "Restore display state", UI_MENU_TYPE_ITEM_ACTION,
       ACTION_RESTORE_DISPLAY,
@@ -767,7 +768,7 @@ static ui_menu_item_t settings_menu_head[] = {
 #if 1
     { "Show menu/status in fullscreen", UI_MENU_TYPE_ITEM_CHECK,
       ACTION_FULLSCREEN_DECORATIONS_TOGGLE,
-      (void *)ui_action_toggle_fullscreen_decorations, NULL,
+      (void *)ui_action_toggle_fullscreen_decorations, "FullscreenDecorations",
       GDK_KEY_B, VICE_MOD_MASK, true },
 #else
     /* Mac menubar version */
@@ -795,7 +796,7 @@ static ui_menu_item_t settings_menu_head[] = {
 
     { "Mouse grab", UI_MENU_TYPE_ITEM_CHECK,
       ACTION_MOUSE_GRAB_TOGGLE,
-      (void *)ui_action_toggle_mouse_grab, NULL,
+      (void *)ui_action_toggle_mouse_grab, "Mouse",
       GDK_KEY_M, VICE_MOD_MASK, false },
 #if 0
     { "Swap controlport joysticks", UI_MENU_TYPE_ITEM_CHECK,
@@ -811,35 +812,34 @@ static ui_menu_item_t settings_menu_head[] = {
 };
 /* }}} */
 
-/* {{{ settings_menu_joy_both[] */
+/* {{{ settings_menu_joy_swap[] */
 
-/** \brief  Settings menu - joystick - with controlport swap
+/** \brief  Settings menu - joystick controlport swap
  *
- * Has controlport, userport and keyset items
- *
- * Vaalid for x64/x64sc/x64dtv/xscpu64/x128/xplus4/xcbm5x0
+ * Valid for x64/x64sc/x64dtv/xscpu64/x128/xplus4/xcbm5x0
  */
-static ui_menu_item_t settings_menu_joy_with_swap[] = {
+static ui_menu_item_t settings_menu_joy_swap[] = {
     { "Swap joysticks", UI_MENU_TYPE_ITEM_CHECK,
-      ACTION_SWAP_CONTROLPORT_TOGGLE, (void *)(ui_action_toggle_controlport_swap), NULL,
+      ACTION_SWAP_CONTROLPORT_TOGGLE,
+      (void *)(ui_action_toggle_controlport_swap), NULL,
       GDK_KEY_J, VICE_MOD_MASK, false },
-    { "Allow keyset joystick", UI_MENU_TYPE_ITEM_CHECK,
-      ACTION_KEYSET_JOYSTICK_TOGGLE, (void *)(ui_toggle_resource), (void *)"KeySetEnable",
-      GDK_KEY_J, VICE_MOD_MASK | GDK_SHIFT_MASK, false },
     UI_MENU_TERMINATOR
 };
 /* }}} */
 
-
-/* {{{ settings_menu_joy_userport[] */
-/** \brief  Settings menu - joystick - without controlport swap
+/* {{{ settings_menu_non_vsid[] */
+/** \brief  'Settings' menu section before the tail section
  *
- * Only valid for xvic/xpet/xcbm2
+ * Only valid for non-VSID
  */
-static ui_menu_item_t settings_menu_joy_without_swap[] = {
-    { "Allow keyset joystick", UI_MENU_TYPE_ITEM_CHECK,
-        "keyset", (void *)(ui_toggle_resource), (void *)"KeySetEnable",
-        GDK_KEY_J, VICE_MOD_MASK | GDK_SHIFT_MASK, false },
+static ui_menu_item_t settings_menu_non_vsid[] = {
+    /* Needs to go here to avoid duplicate action names */
+    { "Allow keyset joysticks", UI_MENU_TYPE_ITEM_CHECK,
+      ACTION_KEYSET_JOYSTICK_TOGGLE,
+      (void *)(ui_action_toggle_keyset_joystick), "KeySetEnable",
+      GDK_KEY_J, VICE_MOD_MASK | GDK_SHIFT_MASK, false },
+
+    UI_MENU_SEPARATOR,
     UI_MENU_TERMINATOR
 };
 /* }}} */
@@ -848,8 +848,7 @@ static ui_menu_item_t settings_menu_joy_without_swap[] = {
 /** \brief  'Settings' menu tail section
  */
 static ui_menu_item_t settings_menu_tail[] = {
-    UI_MENU_SEPARATOR,
-    /* the settings dialog */
+   /* the settings dialog */
     { "Settings ...", UI_MENU_TYPE_ITEM_ACTION,
       ACTION_SETTINGS_DIALOG, ui_settings_dialog_create_and_activate_node_callback, NULL,
       GDK_KEY_O, VICE_MOD_MASK, true },
@@ -1004,8 +1003,8 @@ static ui_menu_item_t help_menu[] = {
     { "Compile time features ...", UI_MENU_TYPE_ITEM_ACTION,
       ACTION_HELP_COMPILE_TIME, uicompiletimefeatures_dialog_show, NULL,
       0, 0, true },
-    { "Hotkeys", UI_MENU_TYPE_ITEM_ACTION,
-      ACTION_HELP_HOTKEYS, uihotkeys_dialog_show, NULL,
+    { "Hotkeys ...", UI_MENU_TYPE_ITEM_ACTION,
+      ACTION_HELP_HOTKEYS, ui_popup_hotkeys_settings, NULL,
       0, 0, true },
     { "About VICE", UI_MENU_TYPE_ITEM_ACTION,
       ACTION_HELP_ABOUT, ui_about_dialog_callback, NULL,
@@ -1046,8 +1045,8 @@ static ui_menu_ref_t menu_references[] = {
 
     /* Settings */
     { "settings-section-head",              settings_menu_head },
-    { "settings-section-joy-with-swap",     settings_menu_joy_with_swap },
-    { "settings-section-joy-without-swap",  settings_menu_joy_without_swap },
+    { "settings-section-joy-swap",          settings_menu_joy_swap },
+    { "settings-section-non-vsid",          settings_menu_non_vsid },
     { "settings-section-tail",              settings_menu_tail },
 
     /* Debug */
@@ -1098,14 +1097,6 @@ GtkWidget *ui_machine_menu_bar_create(void)
 #endif
     GtkWidget *help_submenu;
 
-#if 0
-    /* Test looking up a menu item via name */
-    ui_menu_item_t *item = ui_get_vice_menu_item_by_name("reset-soft");
-    if (item != NULL) {
-        ui_set_vice_menu_item_hotkey(item, "z", GDK_MOD1_MASK | GDK_SHIFT_MASK);
-    }
-#endif
-
     /* create the top menu bar */
     menu_bar = gtk_menu_bar_new();
 
@@ -1136,51 +1127,48 @@ GtkWidget *ui_machine_menu_bar_create(void)
         case VICE_MACHINE_C64SC:
             file_menu_tape_section = file_menu_tape;
             file_menu_cart_section = file_menu_cart;
-            settings_menu_joy_section = settings_menu_joy_with_swap;
+            settings_menu_joy_section = settings_menu_joy_swap;
             break;
 
         case VICE_MACHINE_C64DTV:
-            settings_menu_joy_section = settings_menu_joy_with_swap;
+            settings_menu_joy_section = settings_menu_joy_swap;
             break;
 
         case VICE_MACHINE_SCPU64:
             file_menu_cart_section = file_menu_cart;
-            settings_menu_joy_section = settings_menu_joy_with_swap;
+            settings_menu_joy_section = settings_menu_joy_swap;
             break;
 
         case VICE_MACHINE_C128:
             file_menu_tape_section = file_menu_tape;
             file_menu_cart_section = file_menu_cart;
-            settings_menu_joy_section = settings_menu_joy_with_swap;
+            settings_menu_joy_section = settings_menu_joy_swap;
             break;
 
         case VICE_MACHINE_VIC20:
             file_menu_tape_section = file_menu_tape;
             file_menu_cart_section = file_menu_cart;
-            settings_menu_joy_section = settings_menu_joy_without_swap;
             break;
 
         case VICE_MACHINE_PLUS4:
             file_menu_tape_section = file_menu_tape;
             file_menu_cart_section = file_menu_cart;
-            settings_menu_joy_section = settings_menu_joy_with_swap;
+            settings_menu_joy_section = settings_menu_joy_swap;
             break;
 
         case VICE_MACHINE_CBM5x0:
             file_menu_tape_section = file_menu_tape;
             file_menu_cart_section = file_menu_cart;
-            settings_menu_joy_section = settings_menu_joy_with_swap;
+            settings_menu_joy_section = settings_menu_joy_swap;
             break;
 
         case VICE_MACHINE_CBM6x0:
             file_menu_tape_section = file_menu_tape;
             file_menu_cart_section = file_menu_cart;
-            settings_menu_joy_section = settings_menu_joy_without_swap;
             break;
 
         case VICE_MACHINE_PET:
             file_menu_tape_section = file_menu_tape_xpet;
-            settings_menu_joy_section = settings_menu_joy_without_swap;
             break;
 
         case VICE_MACHINE_VSID:
@@ -1210,6 +1198,9 @@ GtkWidget *ui_machine_menu_bar_create(void)
     if (settings_menu_joy_section != NULL) {
         ui_menu_add(settings_submenu, settings_menu_joy_section);
     }
+    if (machine_class != VICE_MACHINE_VSID) {
+        ui_menu_add(settings_submenu, settings_menu_non_vsid);
+    }
     ui_menu_add(settings_submenu, settings_menu_tail);
 
 #ifdef DEBUG
@@ -1226,6 +1217,7 @@ GtkWidget *ui_machine_menu_bar_create(void)
 
     main_menu_bar = menu_bar;    /* XXX: do I need g_object_ref()/g_object_unref()
                                          for this */
+
     return menu_bar;
 }
 
@@ -1384,7 +1376,6 @@ ui_menu_item_t *ui_get_vice_menu_item_by_name(const char *name)
                  type == UI_MENU_TYPE_ITEM_CHECK)) {
             if (ui_vice_menu_iter_get_name(&iter, &item_name) &&
                     item_name != NULL) {
-                //debug_gtk3("Checking '%s'.", item_name);
                 if (strcmp(item_name, name) == 0) {
                     return iter.menu_item;
                 }
@@ -1485,7 +1476,14 @@ gboolean ui_set_vice_menu_item_hotkey_by_name(const char *name,
  */
 GtkWidget *ui_get_gtk_menu_item_by_name(const char *name)
 {
-    GList *node = gtk_container_get_children(GTK_CONTAINER(main_menu_bar));
+    GList *node;
+
+    if (main_menu_bar == NULL) {
+        /* XXX: Happens with VSID for some reason, needs proper fix. */
+        debug_gtk3("FIXME: main_menu_bar == NULL.");
+        return NULL;
+    }
+    node = gtk_container_get_children(GTK_CONTAINER(main_menu_bar));
 
 #if 0
     debug_gtk3("Iterating menu main bar children.");
@@ -1561,4 +1559,54 @@ void ui_clear_vice_menu_item_hotkeys(void)
         iter.menu_item->modifier = 0;
         iter.menu_item->keysym = 0;
     } while (ui_vice_menu_iter_next(&iter));
+}
+
+
+/** \brief  Get menu item keysym and modifier mask by action name
+ *
+ * \param[in]   name        action name
+ * \param[out]  keysym      GDK keysym
+ * \param[out]  modifier    GDK modifier mask
+ *
+ * \return  TRUE if the \a name was found
+ */
+gboolean ui_get_vice_menu_item_hotkey_by_name(const char *name,
+                                              guint *keysym,
+                                              GdkModifierType *modifier)
+{
+    ui_menu_item_t *item = ui_get_vice_menu_item_by_name(name);
+
+    if (item != NULL) {
+        *keysym = item->keysym;
+        *modifier = item->modifier;
+        return TRUE;
+    }
+    *keysym = 0;
+    *modifier = 0;
+    return FALSE;
+}
+
+
+/** \brief  Set accelator label according to the related main menu item
+ *
+ * Doesn't actually add an active accelerator, just the formatted label, the
+ * actual keypress is handled by the related main menu item.
+ *
+ * Used to set popup menu item accelerators that trigger an action also present
+ * as a main menu item.
+ *
+ * \param[in]   item    popup menu item
+ * \param[in]   action  UI action name
+ *
+ * \see     uiactions.h for action names
+ */
+void ui_set_gtk_menu_item_accel_label(GtkWidget *item, const char *action)
+{
+    GtkWidget *accel_label;
+    guint keysym;
+    GdkModifierType modifier;
+
+    accel_label = gtk_bin_get_child(GTK_BIN(item));
+    ui_get_vice_menu_item_hotkey_by_name(action, &keysym, &modifier);
+    gtk_accel_label_set_accel(GTK_ACCEL_LABEL(accel_label), keysym, modifier);
 }

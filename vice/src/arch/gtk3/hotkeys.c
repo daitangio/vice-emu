@@ -36,6 +36,7 @@
 #include <ctype.h>
 #include <inttypes.h>
 #include <time.h>
+#include <sys/time.h>
 #include <errno.h>
 
 #include "archdep.h"
@@ -81,7 +82,7 @@ static int hotkeys_file_set(const char *val, void *param);
 
 /** \brief  Initial size of the buffer of the textfile reader
  *
- * The buffer will be automatically doubled in size 
+ * The buffer will be automatically doubled in size
  */
 #define TEXTFILE_READER_BUFSIZE 1024
 
@@ -410,6 +411,27 @@ void ui_hotkeys_shutdown(void)
 }
 
 
+/* This fails on msys2 and I don't want to spend too much time (heh) on this.
+ * Can be reenabled if required. */
+#if 0
+/** \brief  Log current time, including microseconds
+ */
+static void hotkeys_log_timestamp(void)
+{
+    struct timeval tv;
+
+    if (gettimeofday(&tv, NULL) == 0) {
+        const struct tm *tm;
+        char buffer[256];
+
+        tm = localtime(&(tv.tv_sec));
+        strftime(buffer, sizeof(buffer), "%H:%M.%S", tm);
+        log_message(hotkeys_log, "Hotkeys: timestamp: %s.%lld", buffer, (long long)tv.tv_usec);
+    }
+}
+#endif
+
+
 
 /* {{{ textfile_reader_t methods */
 
@@ -492,7 +514,6 @@ static void textfile_reader_free(textfile_reader_t *reader)
 {
     lib_free(reader->buffer);
     if (reader->fp != NULL) {
-        //debug_gtk3("FCLOSE(%p)", (void*)(reader->fp));
         fclose(reader->fp);
         reader->fp = NULL;
     }
@@ -520,22 +541,16 @@ static bool textfile_reader_open(textfile_reader_t *reader, const char *path)
     textfile_entry_t *current;
     char *complete_path = NULL;
 
-    //debug_gtk3("new file '%s' to open.", path);
-
     /* get top of stack */
     current = reader->entries;
-
     if (current != NULL) {
 
-        //debug_gtk3("old file present, remembering position.");
         if (reader->fp == NULL) {
             debug_gtk3("ERROR: file entry on stack, but no open FP.");
         }
         /* remember position in current file */
         current->pos = ftell(reader->fp);
-        //debug_gtk3("FTELL(%p) = %ld", (void*)(reader->fp), current->pos);
         /* close current file */
-        //debug_gtk3("FCLOSE(%p)", (void*)(reader->fp));
         fclose(reader->fp);
         reader->fp = NULL;
     }
@@ -543,13 +558,11 @@ static bool textfile_reader_open(textfile_reader_t *reader, const char *path)
     /* try to open new file */
     debug_gtk3("Opening new file '%s':", path);
     reader->fp = sysfile_open(path, machine_name, &complete_path, "rb");
-    //debug_gtk3("SYSFILE_OPEN() -> %p", (void*)(reader->fp));
     if (reader->fp == NULL) {
         debug_gtk3("failed.");
         return false;
     } else {
         /* add new file to stack */
-        //debug_gtk3("OK, adding to stack.");
         textfile_entry_t *new = textfile_entry_new(complete_path);
         lib_free(complete_path);
         new->next = current;
@@ -575,9 +588,11 @@ static bool textfile_reader_close(textfile_reader_t *reader)
 
 
     if (reader->fp != NULL) {
-        //debug_gtk3("Current file getting closed: '%s'.", current->path);
-        //debug_gtk3("Closing reader->fp.");
-        //debug_gtk3("FCLOSE(%p)", (void*)(reader->fp));
+#if 0
+        debug_gtk3("Current file getting closed: '%s'.", current->path);
+        debug_gtk3("Closing reader->fp.");
+        debug_gtk3("FCLOSE(%p)", (void*)(reader->fp));
+#endif
         fclose(reader->fp);
         reader->fp = NULL;
     } else {
@@ -601,7 +616,6 @@ static bool textfile_reader_close(textfile_reader_t *reader)
                             current->path);
             }
             reader->fp = fopen(current->path, "rb");
-            //debug_gtk3("FOPEN() -> %p", (void*)(reader->fp));
             if (reader->fp == NULL) {
                 log_message(hotkeys_log,
                             "failed to open '%s'.",
@@ -611,7 +625,6 @@ static bool textfile_reader_close(textfile_reader_t *reader)
             /* reposition stream to the position it had when a new file was
              * opened */
 
-            //debug_gtk3("FSEEK(%p, %ld)", (void*)(reader->fp), current->pos);
             if (fseek(reader->fp, current->pos, SEEK_SET) != 0) {
                 debug_gtk3("FSEEK FAIL!");
                 return false;
@@ -637,8 +650,6 @@ static bool textfile_reader_close(textfile_reader_t *reader)
  */
 static const char *textfile_reader_read(textfile_reader_t *reader)
 {
-    // clearerr(reader->fp);
-
     reader->buflen = 0;
 
     if (reader->entries == NULL) {
@@ -649,8 +660,6 @@ static const char *textfile_reader_read(textfile_reader_t *reader)
         debug_gtk3("NO FP!");
         return NULL;
     }
-
-    //debug_gtk3("READING FROM %p", (void*)(reader->fp));
 
     while (true) {
         int ch = fgetc(reader->fp);
@@ -1358,11 +1367,9 @@ static bool parser_do_include(const char *line, textfile_reader_t *reader)
     userdir = archdep_xdg_data_home();
 
     path = parser_strsubst(arg, "$VICEDIR", vicedir);
-    //debug_gtk3("after subst of $VICEDIR: '%s'.", path);
     tmp = parser_strsubst(path, "$USERDIR", userdir);
     lib_free(path);
     path = tmp;
-    //debug_gtk3("after subst of $USERDIR: '%s'.", path);
 
     lib_free(arg);
     lib_free(vicedir);
@@ -1627,7 +1634,9 @@ bool ui_hotkeys_parse(const char *path)
 
     /* disable debugging */
     hotkeys_debug = false;
-
+#if 0
+    hotkeys_log_timestamp();
+#endif
     /* initialize file stack and open the file */
     textfile_reader_init(&reader);
     if (textfile_reader_open(&reader, path)) {
@@ -1645,7 +1654,6 @@ bool ui_hotkeys_parse(const char *path)
                            textfile_reader_linenum(&reader),
                            line);
                 }
-                //printf("TRIMMED : '%s'\n", trimmed);
 
                 if (*trimmed == '\0'
                         || *trimmed == HOTKEYS_COMMENT
@@ -1680,7 +1688,9 @@ bool ui_hotkeys_parse(const char *path)
         status = false;
     }
     textfile_reader_free(&reader);
-
+#if 0
+    hotkeys_log_timestamp();
+#endif
     return status;
 }
 
@@ -1715,6 +1725,10 @@ char *ui_hotkeys_get_hotkey_string_for_action(const char *action)
 }
 
 
+/** \brief  Helper: log I/O error
+ *
+ * Logs libc I/O errors to the hotkeys log, including errno and description.
+ */
 static void export_log_io_error(void)
 {
     log_error(hotkeys_log,
@@ -1723,7 +1737,12 @@ static void export_log_io_error(void)
 }
 
 
-
+/** \brief  Output the header for an exported hotkeys file
+ *
+ * \param[in]   fp  file descriptor
+ *
+ * \return  true on success
+ */
 static bool export_header(FILE *fp)
 {
     int result;
@@ -1740,8 +1759,6 @@ static bool export_header(FILE *fp)
         export_log_io_error();
         return false;
     }
-
-
 
     /* add current datetime */
     t = time(NULL);
@@ -1767,7 +1784,6 @@ static bool export_header(FILE *fp)
         return false;
     }
 
-
     result = fprintf(fp,
 "!debug disable\n"
 "!clear\n"
@@ -1780,8 +1796,6 @@ static bool export_header(FILE *fp)
     }
     return true;
 }
-
-
 
 
 /** \brief  Export all currently registered hotkeys to file \a path
@@ -1845,7 +1859,5 @@ bool ui_hotkeys_export(const char *path)
     } while (ui_vice_menu_iter_next(&iter));
 
     fclose(fp);
-
     return true;
 }
-
